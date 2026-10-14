@@ -240,11 +240,13 @@ export function SummaryField({
   );
 }
 
-// A property reads as a small outlined button; one not set yet is dashed,
-// and a switch that is on takes the accent.
+// A property reads as a small tinted chip, as terms do on the other pages;
+// one not set yet is a dashed outline, and a switch that is on takes the
+// accent.
 export const chip =
-  "h-7 max-w-full min-w-0 gap-1.5 px-2.5 text-[13px] font-normal shadow-none has-[>svg]:px-2.5 [&>svg]:text-muted-foreground";
-export const unset = "border-dashed text-muted-foreground";
+  "h-7 max-w-full min-w-0 gap-1.5 border-transparent bg-muted px-2.5 text-[13px] font-normal shadow-none hover:bg-accent has-[>svg]:px-2.5 dark:border-transparent dark:bg-muted dark:hover:bg-accent [&>svg]:text-muted-foreground";
+export const unset =
+  "border-dashed border-input bg-transparent text-muted-foreground hover:bg-muted/60 dark:border-input dark:bg-transparent";
 const on =
   "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary dark:bg-primary/15 [&>svg]:text-primary";
 
