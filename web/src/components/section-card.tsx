@@ -23,7 +23,7 @@ export function SectionCard({
   children?: React.ReactNode
 }) {
   return (
-    <section className={cn('min-w-0 rounded-xl border bg-card p-5 sm:p-6', className)}>
+    <section data-slot='card' className={cn('min-w-0 rounded-xl border bg-card p-5 sm:p-6', className)}>
       <header className={cn('flex items-start gap-3.5', children && 'mb-5')}>
         {Icon && (
           <span className='flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground [&_svg]:size-[18px]'>
