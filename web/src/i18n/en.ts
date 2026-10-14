@@ -114,7 +114,6 @@ export const en = {
   "session.noSignOut": "Local mode needs no signing in; set a password in your profile to sign in and out",
   "session.signOutNote": "You will need to sign in again to use the studio.",
   "session.role": "Owner",
-  "session.local": "Local mode",
   "session.readOnly": "Read only",
   "session.readOnlyNote": "This server runs without --write: you can read and preview here, but changes are not saved.",
   "session.checking": "Checking your session",
