@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/empty-state";
+import { FilterChips } from "@/components/filter-chips";
 import { AppHeader } from "@/components/layout/app-header";
 import { Main } from "@/components/layout/main";
 import { PageTitle } from "@/components/layout/page-title";
@@ -107,20 +108,15 @@ export function Apps() {
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          <Tabs value={kind} onValueChange={(value) => set({ kind: value as AppKind, id: undefined })}>
-            <TabsList>
-              <TabsTrigger value="theme">
-                <Palette />
-                {t("apps.themes")}
-                {apps.data && <span className="text-muted-foreground tabular-nums">{count("theme")}</span>}
-              </TabsTrigger>
-              <TabsTrigger value="plugin">
-                <Puzzle />
-                {t("apps.plugins")}
-                {apps.data && <span className="text-muted-foreground tabular-nums">{count("plugin")}</span>}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <FilterChips<AppKind>
+            label={t("nav.apps")}
+            value={kind}
+            onChange={(value) => set({ kind: value, id: undefined })}
+            options={[
+              { value: "theme", label: t("apps.themes"), icon: Palette, count: apps.data ? count("theme") : undefined },
+              { value: "plugin", label: t("apps.plugins"), icon: Puzzle, count: apps.data ? count("plugin") : undefined },
+            ]}
+          />
           <SearchBox value={search.q ?? ""} onChange={(q) => set({ q: q || undefined })} />
           <Select
             value={search.source ?? "all"}
@@ -146,9 +142,13 @@ export function Apps() {
             ))}
           </div>
         ) : shown.length === 0 ? (
-          <p className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
-            {t(kind === "theme" ? "apps.noThemes" : "apps.noPlugins")}
-          </p>
+          <EmptyState icon={kind === "theme" ? Palette : Puzzle} title={t(kind === "theme" ? "apps.noThemes" : "apps.noPlugins")}>
+            {(search.q || search.source) && (
+              <Button variant="outline" onClick={() => set({ q: undefined, source: undefined })}>
+                {t("apps.clearFilters")}
+              </Button>
+            )}
+          </EmptyState>
         ) : (
           <div className={grid(kind)}>
             {shown.map((app) => (
@@ -224,7 +224,12 @@ function AppCard({
   const { t } = useI18n();
   const theme = app.kind === "theme";
   return (
-    <article className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", app.update && "border-primary/40")}>
+    <article
+      className={cn(
+        "flex flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-foreground/15",
+        app.update && "border-primary/40",
+      )}
+    >
       {theme && (
         <button type="button" onClick={onOpen} className="outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
           <AppScreenshot app={app} className="aspect-[16/10] border-b" />

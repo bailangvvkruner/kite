@@ -637,6 +637,7 @@ export const en = {
   "apps.official": "Official",
   "apps.community": "Community",
   "apps.search": "Search themes and plugins",
+  "apps.clearFilters": "Clear filters",
   "apps.noThemes": "No theme in the index matches.",
   "apps.noPlugins": "No plugin in the index matches.",
   "apps.updatable": "{version} available",

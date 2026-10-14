@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTableBulkActions, DataTablePagination, DataTableToolbar } from "@/components/data-table";
+import { FilterChips } from "@/components/filter-chips";
 import { termsOf, withTerms, type ContentSearch } from "../search";
 
 function apply<T>(updater: Updater<T>, current: T): T {
@@ -151,33 +152,12 @@ export function ContentsTable({
       )}
     >
       {statusTabs && (
-        <div role="group" aria-label={t("list.status")} className="flex flex-wrap gap-1.5">
-          {statusTabs.map((tab) => {
-            const on = tab.value
-              ? search.status?.length === 1 && search.status[0] === tab.value
-              : !search.status?.length;
-            return (
-              <button
-                key={tab.value ?? "all"}
-                type="button"
-                aria-pressed={on}
-                onClick={() => onSearch({ status: tab.value ? [tab.value] : undefined })}
-                className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors",
-                  on ? "bg-foreground font-medium text-background" : "bg-muted text-foreground/80 hover:bg-accent",
-                )}
-              >
-                {tab.label}
-                {tab.count !== undefined && (
-                  <>
-                    {" "}
-                    <span className="tabular-nums opacity-70">{tab.count}</span>
-                  </>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        <FilterChips
+          label={t("list.status")}
+          value={search.status?.length === 1 ? search.status[0] : ""}
+          options={statusTabs.map((tab) => ({ value: tab.value ?? "", label: tab.label, count: tab.count }))}
+          onChange={(value) => onSearch({ status: value ? [value] : undefined })}
+        />
       )}
       <DataTableToolbar
         table={table}

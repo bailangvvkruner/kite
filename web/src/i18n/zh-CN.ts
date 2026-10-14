@@ -617,6 +617,7 @@ export const zhCN: Record<keyof typeof en, string> = {
   "apps.official": "官方",
   "apps.community": "社区",
   "apps.search": "搜索主题和插件",
+  "apps.clearFilters": "清除筛选",
   "apps.noThemes": "索引里没有匹配的主题。",
   "apps.noPlugins": "索引里没有匹配的插件。",
   "apps.updatable": "可更新到 {version}",
