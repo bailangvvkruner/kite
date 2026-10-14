@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
-import { Check, ChevronDown } from "lucide-react";
+import { CheckIcon, CaretDownIcon } from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
 import { isColor } from "@/lib/schema";
@@ -50,7 +50,7 @@ export function ColorField({ id, value, onChange, presets = [], placeholder }: P
           >
             <span className="size-4 rounded-sm ring-1 ring-black/10" style={{ background: preset.value }} />
             {preset.label || preset.value}
-            {on && <Check className="-me-0.5 size-3.5 text-primary" />}
+            {on && <CheckIcon className="-me-0.5 size-3.5 text-primary" />}
           </button>
         );
       })}
@@ -73,7 +73,7 @@ export function ColorField({ id, value, onChange, presets = [], placeholder }: P
             <span className={cn("font-mono text-xs", !valid && "text-muted-foreground")}>
               {valid ? value : (placeholder ?? t("form.customColor"))}
             </span>
-            <ChevronDown className="ms-auto size-3.5 opacity-50" />
+            <CaretDownIcon className="ms-auto size-3.5 opacity-50" />
           </button>
         </PopoverTrigger>
         <PopoverContent align="start" className="kite-color-picker w-60 p-3">

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Check } from "lucide-react";
+import { CheckIcon } from "@phosphor-icons/react";
 
 import { useI18n, type Key } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -106,7 +106,7 @@ export function Hint({ tone, children }: { tone?: "right" | "wrong"; children: R
         tone === "right" && "text-success",
       )}
     >
-      {tone === "right" && <Check aria-hidden className="me-1 inline size-3.5 align-[-0.15em]" />}
+      {tone === "right" && <CheckIcon aria-hidden className="me-1 inline size-3.5 align-[-0.15em]" />}
       {children}
     </p>
   );

@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
-import { ImageUp, RotateCcw, X } from "lucide-react";
+import { UploadSimpleIcon, ArrowCounterClockwiseIcon, XIcon } from "@phosphor-icons/react";
 
 import type { Field } from "@/api/client";
 import { locales, useI18n, type Key } from "@/i18n";
@@ -137,7 +137,7 @@ function ResetButton({ onReset }: { onReset: () => void }) {
           aria-label={t("form.resetDefault")}
           onClick={onReset}
         >
-          <RotateCcw className="size-3.5" />
+          <ArrowCounterClockwiseIcon className="size-3.5" />
         </Button>
       </TooltipTrigger>
       <TooltipContent>{t("form.resetDefault")}</TooltipContent>
@@ -370,7 +370,7 @@ function ImageField({
           {value ? (
             <img src={shown} alt="" className="size-full object-contain" />
           ) : (
-            <ImageUp className="size-5 text-muted-foreground" />
+            <UploadSimpleIcon className="size-5 text-muted-foreground" />
           )}
         </div>
         <div className="min-w-0 flex-1">
@@ -392,7 +392,7 @@ function ImageField({
               aria-label={t("form.removeImage")}
               onClick={() => onChange(undefined)}
             >
-              <X />
+              <XIcon />
             </Button>
           )}
         </div>

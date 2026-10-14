@@ -1,11 +1,11 @@
-import { Loader2 } from 'lucide-react'
+import { CircleNotchIcon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
-// Kite: shadcn-admin writes the spinning Loader2 inline; the studio's own
+// Kite: shadcn-admin writes the spinning icon inline; the studio's own
 // screens use it often enough to name it.
-function Spinner({ className, ...props }: React.ComponentProps<typeof Loader2>) {
+function Spinner({ className, ...props }: React.ComponentProps<typeof CircleNotchIcon>) {
   return (
-    <Loader2
+    <CircleNotchIcon
       role='status'
       aria-label='Loading'
       className={cn('size-4 animate-spin', className)}

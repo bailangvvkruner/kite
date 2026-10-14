@@ -1,19 +1,19 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  CircleAlert,
-  CircleCheck,
-  CloudUpload,
-  Download,
-  ExternalLink,
-  FileArchive,
-  GitBranch,
-  Info,
-  Package,
-  Pin,
-  Upload,
-  XCircle,
-} from "lucide-react";
+  WarningCircleIcon,
+  CheckCircleIcon,
+  CloudArrowUpIcon,
+  DownloadSimpleIcon,
+  ArrowSquareOutIcon,
+  FileZipIcon,
+  GitBranchIcon,
+  InfoIcon,
+  PackageIcon,
+  PushPinIcon,
+  UploadSimpleIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -98,7 +98,7 @@ function ExportCard() {
         : null;
 
   return (
-    <SectionCard icon={FileArchive} title={t("deploy.export")} description={t("deploy.exportNote")}>
+    <SectionCard icon={FileZipIcon} title={t("deploy.export")} description={t("deploy.exportNote")}>
       <div className="grid gap-4">
         {site.isPending ? (
           <Skeleton className="h-16 w-full" />
@@ -121,7 +121,7 @@ function ExportCard() {
 
         {said && (
           <Alert variant="destructive">
-            <XCircle />
+            <XCircleIcon />
             <AlertTitle>{said.title}</AlertTitle>
             {said.detail && <AlertDescription className="break-all">{said.detail}</AlertDescription>}
           </Alert>
@@ -129,7 +129,7 @@ function ExportCard() {
 
         <div>
           <Button onClick={start} disabled={exporting.isPending}>
-            {exporting.isPending ? <Spinner /> : <Download />}
+            {exporting.isPending ? <Spinner /> : <DownloadSimpleIcon />}
             {t(exporting.isPending ? "deploy.exporting" : "deploy.exportAction")}
           </Button>
         </div>
@@ -185,7 +185,7 @@ function GitHubCard() {
       : problem(connect.error instanceof ApiError ? connect.error.code : undefined, connect.error.message);
 
   return (
-    <SectionCard icon={GitBranch} title={t("deploy.github")} description={t("deploy.githubNote")}>
+    <SectionCard icon={GitBranchIcon} title={t("deploy.github")} description={t("deploy.githubNote")}>
       <div className="grid gap-4 text-sm">
         {!state ? (
           <Skeleton className="h-24 w-full" />
@@ -265,7 +265,7 @@ function GitHubCard() {
                 </div>
                 {refusal && (
                   <Alert variant="destructive">
-                    <XCircle />
+                    <XCircleIcon />
                     <AlertTitle>{refusal.title}</AlertTitle>
                     {(refusal.detail || refusal.fix) && (
                       <AlertDescription>
@@ -277,7 +277,7 @@ function GitHubCard() {
                 )}
                 <div className="flex flex-wrap gap-2">
                   <Button type="submit" disabled={connect.isPending || !typed.trim() || (!fromEnv && !token.trim())}>
-                    {connect.isPending ? <Spinner /> : <GitBranch />}
+                    {connect.isPending ? <Spinner /> : <GitBranchIcon />}
                     {t(connect.isPending ? "deploy.githubConnecting" : "deploy.githubConnect")}
                   </Button>
                   {editing && (
@@ -348,7 +348,7 @@ function PushCard() {
   const host = hosts[delivery.data?.deploy_host ?? ""];
 
   return (
-    <SectionCard icon={CloudUpload} title={t("deploy.push")} description={t("deploy.pushNote")}>
+    <SectionCard icon={CloudArrowUpIcon} title={t("deploy.push")} description={t("deploy.pushNote")}>
       <div className="grid gap-4 text-sm">
         {delivery.isPending ? (
           <Skeleton className="h-24 w-full" />
@@ -364,19 +364,19 @@ function PushCard() {
               </div>
               {writable && dirty.length > 0 ? (
                 <Button onClick={() => setPublishing(true)}>
-                  <Upload />
+                  <UploadSimpleIcon />
                   {t("publish.publishAll", { count: dirty.length })}
                 </Button>
               ) : writable && delivery.data?.ahead ? (
                 <Button disabled={publish.pending} onClick={() => void publish.push()}>
-                  {publish.pending ? <Spinner /> : <Upload />}
+                  {publish.pending ? <Spinner /> : <UploadSimpleIcon />}
                   {t("publish.pushCommits", { count: delivery.data.ahead })}
                 </Button>
               ) : null}
               {delivery.data?.deployed === "done" && delivery.data.deployed_url && (
                 <Button variant="outline" asChild>
                   <a href={delivery.data.deployed_url} target="_blank" rel="noreferrer">
-                    <ExternalLink />
+                    <ArrowSquareOutIcon />
                     {t("publish.viewSite")}
                   </a>
                 </Button>
@@ -456,7 +456,7 @@ function KiteCard() {
       : null;
 
   return (
-    <SectionCard icon={Package} title={t("deploy.kite")} description={t("deploy.kiteNote")}>
+    <SectionCard icon={PackageIcon} title={t("deploy.kite")} description={t("deploy.kiteNote")}>
       <div className="grid gap-4 text-sm">
         {!kite ? (
           <Skeleton className="h-12 w-full" />
@@ -480,7 +480,7 @@ function KiteCard() {
             {action && (
               <div>
                 <Button variant="outline" onClick={pinNow} disabled={pin.isPending}>
-                  {pin.isPending ? <Spinner /> : <Pin />}
+                  {pin.isPending ? <Spinner /> : <PushPinIcon />}
                   {t(action, { running: kite.running ?? "" })}
                 </Button>
               </div>
@@ -493,10 +493,10 @@ function KiteCard() {
 }
 
 const checkTones = {
-  ok: { icon: CircleCheck, className: "text-success" },
-  warn: { icon: CircleAlert, className: "text-warning" },
-  bad: { icon: XCircle, className: "text-destructive" },
-  info: { icon: Info, className: "text-muted-foreground" },
+  ok: { icon: CheckCircleIcon, className: "text-success" },
+  warn: { icon: WarningCircleIcon, className: "text-warning" },
+  bad: { icon: XCircleIcon, className: "text-destructive" },
+  info: { icon: InfoIcon, className: "text-muted-foreground" },
 };
 
 /** Check is one thing the export will do, and whether it is as it should be. */

@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
-import { Palette, Puzzle, RefreshCw, Search, TriangleAlert, WifiOff } from "lucide-react";
+import {
+  PaletteIcon,
+  PuzzlePieceIcon,
+  ArrowClockwiseIcon,
+  MagnifyingGlassIcon,
+  WarningIcon,
+  WifiSlashIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -94,7 +101,7 @@ export function Apps() {
       <Main className="flex flex-1 flex-col gap-4 sm:gap-6">
         <PageTitle title={t("nav.apps")} description={t("apps.note")}>
           <Button variant="outline" disabled={refresh.isPending} onClick={fetchAgain}>
-            {refresh.isPending ? <Spinner /> : <RefreshCw />}
+            {refresh.isPending ? <Spinner /> : <ArrowClockwiseIcon />}
             {t("apps.refresh")}
           </Button>
         </PageTitle>
@@ -102,7 +109,7 @@ export function Apps() {
         <PublishBar className="mb-0 lg:mb-0" />
         {apps.data?.offline && (
           <Alert>
-            <WifiOff />
+            <WifiSlashIcon />
             <AlertDescription>{t("apps.offline", { when: relative(apps.data.fetched) })}</AlertDescription>
           </Alert>
         )}
@@ -113,8 +120,8 @@ export function Apps() {
             value={kind}
             onChange={(value) => set({ kind: value, id: undefined })}
             options={[
-              { value: "theme", label: t("apps.themes"), icon: Palette, count: apps.data ? count("theme") : undefined },
-              { value: "plugin", label: t("apps.plugins"), icon: Puzzle, count: apps.data ? count("plugin") : undefined },
+              { value: "theme", label: t("apps.themes"), icon: PaletteIcon, count: apps.data ? count("theme") : undefined },
+              { value: "plugin", label: t("apps.plugins"), icon: PuzzlePieceIcon, count: apps.data ? count("plugin") : undefined },
             ]}
           />
           <SearchBox value={search.q ?? ""} onChange={(q) => set({ q: q || undefined })} />
@@ -142,7 +149,7 @@ export function Apps() {
             ))}
           </div>
         ) : shown.length === 0 ? (
-          <EmptyState icon={kind === "theme" ? Palette : Puzzle} title={t(kind === "theme" ? "apps.noThemes" : "apps.noPlugins")}>
+          <EmptyState icon={kind === "theme" ? PaletteIcon : PuzzlePieceIcon} title={t(kind === "theme" ? "apps.noThemes" : "apps.noPlugins")}>
             {(search.q || search.source) && (
               <Button variant="outline" onClick={() => set({ q: undefined, source: undefined })}>
                 {t("apps.clearFilters")}
@@ -197,7 +204,7 @@ function SearchBox({ value, onChange }: { value: string; onChange: (q: string) =
   }, [query, value, onChange]);
   return (
     <div className="relative w-full sm:w-64">
-      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+      <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         type="search"
         value={query}
@@ -251,7 +258,7 @@ function AppCard({
           )}
           {app.problem ? (
             <p className="flex gap-2 text-sm text-muted-foreground">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <WarningIcon className="mt-0.5 size-4 shrink-0" />
               <span className="line-clamp-2">{t("apps.unfit")}</span>
             </p>
           ) : (

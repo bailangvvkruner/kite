@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
+import { CaretRightIcon } from '@phosphor-icons/react'
 import {
   Collapsible,
   CollapsibleContent,
@@ -94,7 +94,8 @@ function SidebarMenuLink({ item, active }: { item: NavLink; active: boolean }) {
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
         <Link to={item.url} onClick={() => setOpenMobile(false)}>
-          {item.icon && <item.icon />}
+          {/* Kite: the current page's icon is filled, the rest drawn in line. */}
+          {item.icon && <item.icon weight={active ? 'fill' : 'regular'} />}
           <span>{item.title}</span>
           {item.badge && <NavBadge>{item.badge}</NavBadge>}
         </Link>
@@ -123,7 +124,7 @@ function SidebarMenuCollapsible({
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             {item.badge && <NavBadge>{item.badge}</NavBadge>}
-            <ChevronRight className='ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 rtl:rotate-180' />
+            <CaretRightIcon className='ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 rtl:rotate-180' />
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent className='CollapsibleContent'>
@@ -167,7 +168,7 @@ function SidebarMenuCollapsedDropdown({
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             {item.badge && <NavBadge>{item.badge}</NavBadge>}
-            <ChevronRight className='ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+            <CaretRightIcon className='ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent side='right' align='start' sideOffset={4}>

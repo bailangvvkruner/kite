@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
+import { CaretRightIcon } from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
 import { useLatest, useMonthlyCounts, useStatusCounts, useTerms } from "@/hooks/useContents";
@@ -51,7 +51,7 @@ export function LatestPosts({ kind }: { kind: string }) {
           className="flex items-center text-sm text-muted-foreground hover:text-foreground"
         >
           {total === undefined ? t("dashboard.viewAll") : t("dashboard.allOf", { count: total })}
-          <ChevronRight className="size-4" />
+          <CaretRightIcon className="size-4" />
         </Link>
       }
     >

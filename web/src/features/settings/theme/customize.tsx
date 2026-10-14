@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, ExternalLink, House, PanelRight, RotateCcw, XCircle } from "lucide-react";
+import {
+  CaretLeftIcon,
+  ArrowSquareOutIcon,
+  HouseIcon,
+  SidebarSimpleIcon,
+  ArrowCounterClockwiseIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError, type Field } from "@/api/client";
@@ -182,7 +189,7 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
         {theme.error ? (
           <div className="p-6">
             <Alert variant="destructive">
-              <XCircle />
+              <XCircleIcon />
               <AlertTitle>
                 {theme.error instanceof ApiError && theme.error.code === "not_found"
                   ? t("customize.missing")
@@ -204,7 +211,7 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
       <ReadOnlyNote />
       {said && (
         <Alert variant="destructive">
-          <XCircle />
+          <XCircleIcon />
           <AlertTitle>{said.title}</AlertTitle>
           <AlertDescription>
             {said.detail && <p>{said.detail}</p>}
@@ -227,7 +234,7 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
       )}
       {detail.problem && (
         <Alert variant="destructive">
-          <XCircle />
+          <XCircleIcon />
           <AlertTitle>{t("customize.unusable")}</AlertTitle>
           <AlertDescription>{detail.problem}</AlertDescription>
         </Alert>
@@ -283,7 +290,7 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
       {/* The toolbar's height in the editor, so the two screens line up. */}
       <div className="flex h-[49px] shrink-0 items-center gap-1 border-b px-3.5">
         <IconButton label={t("customize.home")} onClick={() => frame.current?.home()}>
-          <House />
+          <HouseIcon />
         </IconButton>
         <span className="me-auto min-w-0 truncate text-[13px]">
           <span className="font-medium">{page?.title || t("customize.previewTitle")}</span>
@@ -307,12 +314,12 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
             if (href) window.open(href, "_blank", "noopener");
           }}
         >
-          <ExternalLink />
+          <ArrowSquareOutIcon />
         </IconButton>
       </div>
       {preview.failed && (
         <Alert variant="destructive" className="rounded-none border-x-0 border-t-0">
-          <XCircle />
+          <XCircleIcon />
           <AlertTitle>{t("customize.previewFailed")}</AlertTitle>
           <AlertDescription>{preview.failed.message}</AlertDescription>
         </Alert>
@@ -354,7 +361,7 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
                 onClick={() => setOpen(!open)}
                 className={cn(open && "border border-primary/25 bg-primary/10 text-primary hover:bg-primary/15")}
               >
-                <PanelRight />
+                <SidebarSimpleIcon />
                 {t("customize.preview")}
               </Button>
             </TooltipTrigger>
@@ -363,7 +370,7 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
         )}
         {writable && !detail.problem && values && fields.length > 0 && (
           <Button variant="ghost" size="sm" className="shrink-0" onClick={() => setResetting(true)}>
-            <RotateCcw />
+            <ArrowCounterClockwiseIcon />
             {t("customize.reset")}
           </Button>
         )}
@@ -477,7 +484,7 @@ function BackButton() {
       <TooltipTrigger asChild>
         <Button variant="ghost" size="icon" className="size-8 shrink-0" asChild>
           <Link to="/settings/theme" aria-label={t("customize.back")}>
-            <ChevronLeft />
+            <CaretLeftIcon />
           </Link>
         </Button>
       </TooltipTrigger>

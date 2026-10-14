@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { XCircle } from "lucide-react";
+import { XCircleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError, type Settings } from "@/api/client";
@@ -92,7 +92,7 @@ export function FormProblem({ form }: { form: Form }) {
   if (!form.said) return null;
   return (
     <Alert ref={ref} variant="destructive" className="mb-6 scroll-mt-4">
-      <XCircle />
+      <XCircleIcon />
       <AlertTitle>{form.said.title}</AlertTitle>
       <AlertDescription>
         {form.said.detail && <p>{form.said.detail}</p>}

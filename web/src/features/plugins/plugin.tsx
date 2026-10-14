@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronLeft, Globe, TriangleAlert, XCircle } from "lucide-react";
+import { CaretLeftIcon, GlobeIcon, WarningIcon, XCircleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -76,14 +76,14 @@ export function PluginSettings({ id }: { id: string }) {
           to="/plugins"
           className="-mb-2 inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ChevronLeft className="size-4" />
+          <CaretLeftIcon className="size-4" />
           {t("nav.plugins")}
         </Link>
 
         {!detail ? (
           plugin.error ? (
             <Alert variant="destructive" className="max-w-2xl">
-              <XCircle />
+              <XCircleIcon />
               <AlertTitle>
                 {plugin.error instanceof ApiError && plugin.error.code === "not_found"
                   ? t("plugins.missing")
@@ -120,20 +120,20 @@ export function PluginSettings({ id }: { id: string }) {
             <div className="grid max-w-2xl gap-6">
               {detail.problem && (
                 <Alert variant="destructive">
-                  <TriangleAlert />
+                  <WarningIcon />
                   <AlertTitle>{t("plugins.unusable")}</AlertTitle>
                   <AlertDescription className="break-words">{detail.problem}</AlertDescription>
                 </Alert>
               )}
               {(detail.hosts?.length ?? 0) > 0 && (
                 <Alert>
-                  <Globe />
+                  <GlobeIcon />
                   <AlertDescription>{t("plugins.hosts", { hosts: detail.hosts!.join(", ") })}</AlertDescription>
                 </Alert>
               )}
               {said && (
                 <Alert variant="destructive">
-                  <XCircle />
+                  <XCircleIcon />
                   <AlertTitle>{said.title}</AlertTitle>
                   {said.detail && <AlertDescription>{said.detail}</AlertDescription>}
                 </Alert>

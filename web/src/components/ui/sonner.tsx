@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react'
+import { WarningCircleIcon, CheckCircleIcon, InfoIcon, WarningIcon } from '@phosphor-icons/react'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 import { useI18n } from '@/i18n'
 import { useTheme } from '@/lib/theme'
@@ -23,10 +23,10 @@ export function Toaster({ ...props }: ToasterProps) {
       closeButton
       toastOptions={{ closeButtonAriaLabel: t('common.close') }}
       icons={{
-        success: <CircleCheck size={16} />,
-        info: <Info size={16} />,
-        warning: <TriangleAlert size={16} />,
-        error: <CircleAlert size={16} />,
+        success: <CheckCircleIcon size={16} />,
+        info: <InfoIcon size={16} />,
+        warning: <WarningIcon size={16} />,
+        error: <WarningCircleIcon size={16} />,
       }}
       style={
         {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { GitCommitHorizontal, TriangleAlert } from 'lucide-react'
+import { CloudArrowUpIcon, WarningIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { useWritable } from '@/hooks/useContents'
 import { canPublish, useDelivery, usePublish } from '@/hooks/usePublish'
@@ -56,7 +56,7 @@ export function NavPublish() {
       void navigate({ to: '/deploy' })
     }
   }
-  const Icon = warn ? TriangleAlert : GitCommitHorizontal
+  const Icon = warn ? WarningIcon : CloudArrowUpIcon
   const dialog = (
     <PublishDialog
       ids={[]}
@@ -74,7 +74,7 @@ export function NavPublish() {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip={title} onClick={send}>
-            <Icon className={warn ? 'text-destructive' : 'text-string'} />
+            <Icon weight='duotone' className={warn ? 'text-destructive' : 'text-string'} />
             <span>{title}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -85,7 +85,7 @@ export function NavPublish() {
   return (
     <div className='rounded-xl bg-background p-3 shadow-[0_0_0_1px_rgb(23_32_54/0.05)] dark:shadow-[0_0_0_1px_rgb(255_255_255/0.06)]'>
       <p className='flex items-center gap-2 text-sm font-semibold'>
-        <Icon className={cn('size-4 shrink-0', warn ? 'text-destructive' : 'text-string')} />
+        <Icon weight='duotone' className={cn('size-[18px] shrink-0', warn ? 'text-destructive' : 'text-string')} />
         <span className='truncate'>{title}</span>
       </p>
       {where && <p className='mt-1 truncate text-xs text-muted-foreground'>{where}</p>}

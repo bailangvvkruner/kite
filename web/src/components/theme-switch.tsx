@@ -1,13 +1,13 @@
-import { Monitor, Moon, Sun } from 'lucide-react'
+import { MonitorIcon, MoonIcon, SunIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { useTheme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 
 // Kite: explore's toggle, one click to the next mode instead of a menu.
 const modes = {
-  system: { icon: Monitor, label: 'mode.system', next: 'dark' },
-  dark: { icon: Moon, label: 'mode.dark', next: 'light' },
-  light: { icon: Sun, label: 'mode.light', next: 'system' },
+  system: { icon: MonitorIcon, label: 'mode.system', next: 'dark' },
+  dark: { icon: MoonIcon, label: 'mode.dark', next: 'light' },
+  light: { icon: SunIcon, label: 'mode.light', next: 'system' },
 } as const
 
 /** ThemeSwitch cycles automatic, dark and light mode, showing the current one. */

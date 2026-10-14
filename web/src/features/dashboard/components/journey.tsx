@@ -1,6 +1,12 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { CalendarClock, CircleDashed, GitCommitHorizontal, TriangleAlert, type LucideIcon } from "lucide-react";
+import {
+  CalendarDotsIcon,
+  PencilSimpleLineIcon,
+  CloudArrowUpIcon,
+  WarningIcon,
+} from "@phosphor-icons/react";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
 import { useContentPage, useLatest, useSite, useStatusCounts, useWritable } from "@/hooks/useContents";
@@ -74,7 +80,7 @@ export function Journey({ kind }: { kind: string }) {
         </svg>
 
         <Stop
-          icon={CircleDashed}
+          icon={PencilSimpleLineIcon}
           label={t("dashboard.drafts")}
           count={counts.draft}
           note={latestDraft ? latestDraft.title || latestDraft.slug : t("dashboard.noDrafts")}
@@ -89,7 +95,8 @@ export function Journey({ kind }: { kind: string }) {
           }
         />
         <Stop
-          icon={CalendarClock}
+          icon={CalendarDotsIcon}
+          tone="planned"
           label={t("dashboard.stageScheduled")}
           count={counts.scheduled}
           note={
@@ -108,7 +115,7 @@ export function Journey({ kind }: { kind: string }) {
           }
         />
         <Stop
-          icon={failed && !dirty.length && !ahead ? TriangleAlert : GitCommitHorizontal}
+          icon={failed && !dirty.length && !ahead ? WarningIcon : CloudArrowUpIcon}
           tone={failed && !dirty.length && !ahead ? "failed" : dirty.length || ahead ? "waiting" : "quiet"}
           label={t("dashboard.stagePending")}
           count={d ? (git ? dirty.length || ahead : undefined) : undefined}
@@ -172,7 +179,7 @@ export function Journey({ kind }: { kind: string }) {
           params={{ kind }}
           className="mt-5 flex items-center gap-2 rounded-lg bg-destructive/5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
         >
-          <TriangleAlert className="size-4 shrink-0" />
+          <WarningIcon className="size-4 shrink-0" />
           {t("problems.notIndexed", { count: problems })}
         </Link>
       )}
@@ -189,12 +196,13 @@ export function Journey({ kind }: { kind: string }) {
   );
 }
 
-type Tone = "quiet" | "waiting" | "failed";
+type Tone = "quiet" | "planned" | "waiting" | "failed";
 
 const toneClass: Record<Tone, string> = {
-  quiet: "bg-muted text-muted-foreground",
-  waiting: "bg-warning/12 text-warning",
-  failed: "bg-destructive/10 text-destructive",
+  quiet: "text-muted-foreground",
+  planned: "text-primary",
+  waiting: "text-warning",
+  failed: "text-destructive",
 };
 
 function Stop({
@@ -206,7 +214,7 @@ function Stop({
   note,
   action,
 }: {
-  icon?: LucideIcon;
+  icon?: PhosphorIcon;
   /** mark draws the last stop as the kite itself. */
   mark?: boolean;
   tone?: Tone;
@@ -219,14 +227,19 @@ function Stop({
   return (
     <div className="relative min-w-0">
       <div className="mb-3 flex items-center">
-        {/* The ring in the card's own color cuts the string where it passes. */}
+        {/* A backing in the card's own color cuts the string where it passes;
+            only the kite has a tile of its own. */}
         <span
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-xl ring-4 ring-card [&_svg]:size-[18px]",
-            mark ? "bg-primary" : toneClass[tone],
+            "flex size-10 shrink-0 items-center justify-center rounded-xl ring-4 ring-card",
+            mark ? "bg-primary" : cn("bg-card", toneClass[tone]),
           )}
         >
-          {mark ? <KiteMark tight className="h-4 w-auto text-white! dark:text-white!" /> : Icon && <Icon />}
+          {mark ? (
+            <KiteMark tight className="h-4 w-auto text-white! dark:text-white!" />
+          ) : (
+            Icon && <Icon weight="duotone" className="size-[30px]" />
+          )}
         </span>
         {/* Padded on both sides, so the string stops short of the figure. */}
         <span className="flex items-baseline gap-2 bg-card px-2.5">

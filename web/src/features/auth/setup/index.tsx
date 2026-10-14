@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Check, Loader2, XCircle } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  CircleNotchIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 
 import { ApiError, api } from "@/api/client";
 import { useI18n, useProblem } from "@/i18n";
@@ -149,20 +155,20 @@ export function Setup() {
               <>
                 {(refusal || opening === "failed") && (
                   <Alert variant="destructive">
-                    <XCircle />
+                    <XCircleIcon />
                     <AlertTitle>{refusal?.title ?? t("setup.startFailed")}</AlertTitle>
                     {refusal?.detail && <AlertDescription>{refusal.detail}</AlertDescription>}
                   </Alert>
                 )}
                 <Button type="submit" className="mt-2" disabled={creating || opening === "failed"}>
-                  {creating ? <Loader2 className="animate-spin" /> : <Check />}
+                  {creating ? <CircleNotchIcon className="animate-spin" /> : <CheckIcon />}
                   {t(opening === "waiting" ? "setup.starting" : install.isPending ? "setup.creating" : "setup.create")}
                 </Button>
               </>
             ) : (
               <Button type="submit" className="mt-2">
                 {t("setup.next")}
-                <ArrowRight />
+                <ArrowRightIcon />
               </Button>
             )}
           </>
@@ -189,7 +195,7 @@ export function Setup() {
 
             {refusal && (
               <Alert variant="destructive">
-                <XCircle />
+                <XCircleIcon />
                 <AlertTitle>{refusal.title}</AlertTitle>
                 {refusal.detail && <AlertDescription>{refusal.detail}</AlertDescription>}
               </Alert>
@@ -202,11 +208,11 @@ export function Setup() {
                 onClick={() => setStep("site")}
                 disabled={install.isPending}
               >
-                <ArrowLeft />
+                <ArrowLeftIcon />
                 {t("setup.back")}
               </Button>
               <Button type="submit" className="flex-1" disabled={install.isPending || !ready}>
-                {install.isPending ? <Loader2 className="animate-spin" /> : <Check />}
+                {install.isPending ? <CircleNotchIcon className="animate-spin" /> : <CheckIcon />}
                 {t(install.isPending ? "setup.installing" : "setup.install")}
               </Button>
             </div>
@@ -285,7 +291,7 @@ function Steps({ step }: { step: "site" | "account" }) {
                 here || done ? "border-primary bg-primary text-primary-foreground" : "border-border",
               )}
             >
-              {done ? <Check className="size-3" /> : i + 1}
+              {done ? <CheckIcon className="size-3" /> : i + 1}
             </span>
             <span className={cn(here && "text-foreground")}>{s.label}</span>
             {i < steps.length - 1 && (

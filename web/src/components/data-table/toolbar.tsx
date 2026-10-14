@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { XIcon } from '@phosphor-icons/react'
 import { type Table } from '@tanstack/react-table'
 import { useI18n } from '@/i18n'
 import { Button } from '@/components/ui/button'
@@ -83,7 +83,7 @@ export function DataTableToolbar<TData>({
             className='h-8 px-2 lg:px-3'
           >
             {t('list.reset')}
-            <X className='ms-2 h-4 w-4' />
+            <XIcon className='ms-2 h-4 w-4' />
           </Button>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { UserRound } from 'lucide-react'
+import { UserIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { useAccountInfo } from '@/hooks/useAccount'
 import { useSession } from '@/hooks/useSession'
@@ -56,7 +56,7 @@ export function UserAvatar({ className, large }: { className?: string; large?: b
         )}
       >
         {account.initials ?? (
-          <UserRound
+          <UserIcon
             className={cn(large ? 'size-7' : 'size-4', 'text-muted-foreground')}
           />
         )}

@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FilePlus2 } from "lucide-react";
+import { FilePlusIcon } from "@phosphor-icons/react";
 
 import { api, unwrap, type Field, type Settings } from "@/api/client";
 import { useI18n } from "@/i18n";
@@ -166,7 +166,7 @@ function PickContent({ onPick }: { onPick: (link: Link) => void }) {
     >
       <PopoverTrigger asChild>
         <Button type="button" variant="ghost" size="sm" className="justify-self-start text-muted-foreground">
-          <FilePlus2 />
+          <FilePlusIcon />
           {t("menus.fromContent")}
         </Button>
       </PopoverTrigger>

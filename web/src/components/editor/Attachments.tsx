@@ -1,5 +1,12 @@
 import { useMemo, useRef, useState } from "react";
-import { Copy, FileText, Paperclip, RefreshCw, Trash2, Upload } from "lucide-react";
+import {
+  CopyIcon,
+  FileTextIcon,
+  PaperclipIcon,
+  ArrowClockwiseIcon,
+  TrashIcon,
+  UploadSimpleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError, type Draft, type Media } from "@/api/client";
@@ -120,7 +127,7 @@ export function Attachments({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="outline" size="sm" className={cn(chip, items.length === 0 && unset)}>
-            <Paperclip />
+            <PaperclipIcon />
             {t("editor.files")}
             {items.length > 0 && <span className="text-muted-foreground tabular-nums">{items.length}</span>}
           </Button>
@@ -135,7 +142,7 @@ export function Attachments({
               {files.data ? t("editor.filesCount", { count: items.length }) : null}
             </span>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => picker.current?.click()}>
-              {adding ? <Spinner /> : <Upload />}
+              {adding ? <Spinner /> : <UploadSimpleIcon />}
               {t("editor.filesUpload")}
             </Button>
           </div>
@@ -180,7 +187,7 @@ export function Attachments({
                           title={t("editor.filesCopy")}
                           onClick={() => void copy(media)}
                         >
-                          <Copy />
+                          <CopyIcon />
                         </Button>
                         <Button
                           variant="ghost"
@@ -197,7 +204,7 @@ export function Attachments({
                             }
                           }}
                         >
-                          {replace.isPending && replace.variables?.name === media.name ? <Spinner /> : <RefreshCw />}
+                          {replace.isPending && replace.variables?.name === media.name ? <Spinner /> : <ArrowClockwiseIcon />}
                         </Button>
                         <Button
                           variant="ghost"
@@ -207,7 +214,7 @@ export function Attachments({
                           title={t("editor.filesDelete")}
                           onClick={() => setRemoving(media)}
                         >
-                          <Trash2 />
+                          <TrashIcon />
                         </Button>
                       </div>
                     </li>
@@ -287,7 +294,7 @@ function Thumb({ media, renewed }: { media: Media; renewed?: number }) {
           className="size-full object-cover"
         />
       ) : (
-        <FileText className="size-4 text-muted-foreground" />
+        <FileTextIcon className="size-4 text-muted-foreground" />
       )}
     </div>
   );

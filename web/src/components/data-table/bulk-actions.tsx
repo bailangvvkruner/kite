@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { type Table } from '@tanstack/react-table'
-import { X } from 'lucide-react'
+import { XIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -167,7 +167,7 @@ export function DataTableBulkActions<TData>({
                 className='size-6 rounded-full'
                 aria-label={t('list.clearSelection')}
               >
-                <X />
+                <XIcon />
               </Button>
             </TooltipTrigger>
             <TooltipContent>

@@ -1,7 +1,14 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import type { OnChangeFn, RowSelectionState } from "@tanstack/react-table";
-import { ArrowLeft, Plus, RotateCcw, Trash2, Upload, XCircle } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  PlusIcon,
+  ArrowCounterClockwiseIcon,
+  TrashIcon,
+  UploadSimpleIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import type { Summary } from "@/api/client";
@@ -226,7 +233,7 @@ export function ContentList() {
           {trashed ? (
             <Button variant="outline" asChild>
               <Link to="/content/$kind" params={{ kind }}>
-                <ArrowLeft />
+                <ArrowLeftIcon />
                 {t("list.backTo", { kind: kindLabel.many(kind) })}
               </Link>
             </Button>
@@ -234,7 +241,7 @@ export function ContentList() {
             <>
               <Button variant="outline" asChild>
                 <Link to="/content/$kind" params={{ kind }} search={{ trash: true }}>
-                  <Trash2 />
+                  <TrashIcon />
                   {t("status.trash")}
                   {counts.trash ? (
                     <span className="text-muted-foreground tabular-nums">{counts.trash}</span>
@@ -244,7 +251,7 @@ export function ContentList() {
               {writable && (
                 <Button asChild>
                   <Link to="/content/$kind/$id" params={{ kind, id: "new" }}>
-                    <Plus />
+                    <PlusIcon />
                     {t("list.newKind", { kind: kindLabel.one(kind) })}
                   </Link>
                 </Button>
@@ -258,7 +265,7 @@ export function ContentList() {
 
         {batchResult && (
           <Alert variant="destructive">
-            <XCircle />
+            <XCircleIcon />
             <AlertTitle>
               {t("list.partial", {
                 done: batchResult.result.succeeded.length,
@@ -323,7 +330,7 @@ export function ContentList() {
                   {writable && (
                     <Button asChild size="sm">
                       <Link to="/content/$kind/$id" params={{ kind, id: "new" }}>
-                        <Plus />
+                        <PlusIcon />
                         {t("list.newKind", { kind: kindLabel.one(kind) })}
                       </Link>
                     </Button>
@@ -340,19 +347,19 @@ export function ContentList() {
                   size="sm"
                   onClick={() => runBatch("restore", selected.map(targetOf))}
                 >
-                  <RotateCcw />
+                  <ArrowCounterClockwiseIcon />
                   {t("list.restore")}
                 </Button>
               ) : (
                 <>
                   {canPublish(delivery.data) && (
                     <Button variant="outline" size="sm" onClick={() => setPublishing(selected)}>
-                      <Upload />
+                      <UploadSimpleIcon />
                       {t("publish.action")}
                     </Button>
                   )}
                   <Button variant="destructive" size="sm" onClick={() => setConfirming(selected)}>
-                    <Trash2 />
+                    <TrashIcon />
                     {t("editor.delete")}
                   </Button>
                 </>

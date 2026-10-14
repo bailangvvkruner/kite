@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontalIcon } from '@phosphor-icons/react'
 import { type Table } from '@tanstack/react-table'
 import { useI18n } from '@/i18n'
 import { Button } from '@/components/ui/button'
@@ -27,7 +27,7 @@ export function DataTableViewOptions<TData>({
           size='sm'
           className='ms-auto hidden h-8 lg:flex'
         >
-          <SlidersHorizontal className='size-4' />
+          <SlidersHorizontalIcon className='size-4' />
           {t('list.view')}
         </Button>
       </DropdownMenuTrigger>

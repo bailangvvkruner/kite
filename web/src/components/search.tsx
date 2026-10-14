@@ -1,4 +1,4 @@
-import { SearchIcon } from 'lucide-react'
+import { MagnifyingGlassIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
 import { useSearch } from '@/context/search-provider'
@@ -23,7 +23,7 @@ export function Search({
       aria-keyshortcuts='Meta+K Control+K'
       onClick={() => setOpen(true)}
     >
-      <SearchIcon
+      <MagnifyingGlassIcon
         aria-hidden='true'
         className='absolute inset-s-3 top-1/2 -translate-y-1/2'
         size={16}

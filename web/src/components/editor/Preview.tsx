@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ExternalLink, Monitor, Smartphone, X, XCircle } from "lucide-react";
+import {
+  ArrowSquareOutIcon,
+  MonitorIcon,
+  DeviceMobileIcon,
+  XIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -60,10 +66,10 @@ export function WidthToggle({ width, onChange }: { width: Width; onChange: (widt
         pressed={width === "desktop"}
         onClick={() => onChange("desktop")}
       >
-        <Monitor />
+        <MonitorIcon />
       </WidthButton>
       <WidthButton label={t("editor.previewPhone")} pressed={width === "phone"} onClick={() => onChange("phone")}>
-        <Smartphone />
+        <DeviceMobileIcon />
       </WidthButton>
     </div>
   );
@@ -159,7 +165,7 @@ export function Preview({ draft, id, base, live, onClose, onFrame }: Props) {
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="size-8" asChild>
                 <a href={live} target="_blank" rel="noreferrer" aria-label={t("list.open")}>
-                  <ExternalLink />
+                  <ArrowSquareOutIcon />
                 </a>
               </Button>
             </TooltipTrigger>
@@ -175,7 +181,7 @@ export function Preview({ draft, id, base, live, onClose, onFrame }: Props) {
               aria-label={t("editor.previewClose")}
               onClick={onClose}
             >
-              <X />
+              <XIcon />
             </Button>
           </TooltipTrigger>
           <TooltipContent>{t("editor.previewClose")}</TooltipContent>
@@ -186,7 +192,7 @@ export function Preview({ draft, id, base, live, onClose, onFrame }: Props) {
       <div className={cn("relative min-h-0 flex-1", phone && "bg-muted/60 p-4")}>
         {failed && (
           <Alert variant="destructive" className="absolute inset-x-0 top-0 z-10 rounded-none">
-            <XCircle />
+            <XCircleIcon />
             {/* A problem in the body names its file and line, which is long and read whole. */}
             <AlertTitle className="line-clamp-none wrap-anywhere">{failed}</AlertTitle>
           </Alert>

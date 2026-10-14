@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from './ui/button'
@@ -37,7 +37,7 @@ export function PasswordInput({
         className='absolute inset-e-1 top-1/2 h-6 w-6 -translate-y-1/2 rounded-md text-muted-foreground'
         onClick={() => setShowPassword((prev) => !prev)}
       >
-        {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+        {showPassword ? <EyeIcon size={18} /> : <EyeSlashIcon size={18} />}
         <span className='sr-only'>
           {t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
         </span>

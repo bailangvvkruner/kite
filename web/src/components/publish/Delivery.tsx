@@ -1,4 +1,12 @@
-import { Check, GitMerge, Minus, TriangleAlert, Upload, X, XCircle } from "lucide-react";
+import {
+  CheckIcon,
+  GitMergeIcon,
+  MinusIcon,
+  WarningIcon,
+  UploadSimpleIcon,
+  XIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 import { useI18n, useProblem, type Key, type Values } from "@/i18n";
@@ -131,13 +139,13 @@ export function StepMark({
       )}
     >
       {standing === "done" ? (
-        <Check strokeWidth={3} />
+        <CheckIcon weight="bold" />
       ) : standing === "failed" ? (
-        <X strokeWidth={3} />
+        <XIcon weight="bold" />
       ) : standing === "working" ? (
         <Spinner className="size-[70%]!" />
       ) : standing === "unknown" ? (
-        <Minus />
+        <MinusIcon />
       ) : current ? (
         <span className="size-[35%] rounded-full bg-warning" />
       ) : null}
@@ -264,7 +272,7 @@ export function PublishProblems({ publish }: { publish: Publish }) {
           disabled={publish.pending}
           onClick={() => void publish.runWithoutHooks()}
         >
-          {publish.pending ? <Spinner /> : <Upload />}
+          {publish.pending ? <Spinner /> : <UploadSimpleIcon />}
           {t("publish.skipHooks")}
         </Button>
       )}
@@ -277,7 +285,7 @@ export function PublishProblems({ publish }: { publish: Publish }) {
           disabled={publish.pending}
           onClick={() => void publish.push()}
         >
-          {publish.pending ? <Spinner /> : <Upload />}
+          {publish.pending ? <Spinner /> : <UploadSimpleIcon />}
           {t("publish.pushAgain")}
         </Button>
       )}
@@ -339,7 +347,7 @@ function RemoteMoved({ remote, publish }: { remote: RemoteChange; publish: Publi
             {publish.pending ? (
               <Spinner />
             ) : (
-              <GitMerge />
+              <GitMergeIcon />
             )}
             {t("publish.remote.rebase")}
           </Button>
@@ -380,7 +388,7 @@ function Problem({
 }) {
   return (
     <Alert variant={tone === "stop" ? "destructive" : "default"}>
-      {tone === "stop" ? <XCircle /> : <TriangleAlert />}
+      {tone === "stop" ? <XCircleIcon /> : <WarningIcon />}
       <AlertTitle>{title}</AlertTitle>
       {(detail || fix) && (
         <AlertDescription>

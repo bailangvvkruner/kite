@@ -1,5 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, MoreHorizontal, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import {
+  ArrowSquareOutIcon,
+  DotsThreeIcon,
+  PencilSimpleIcon,
+  ArrowCounterClockwiseIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 
 import type { Summary } from "@/api/client";
 import { useI18n } from "@/i18n";
@@ -28,33 +34,33 @@ export function RowActions({ item, trashed, writable, onDelete, onRestore }: Pro
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex size-8 p-0 data-[state=open]:bg-muted">
-          <MoreHorizontal className="size-4" />
+          <DotsThreeIcon className="size-4" />
           <span className="sr-only">{t("list.actions")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         {trashed ? (
           <DropdownMenuItem disabled={!writable} onClick={() => onRestore(item)}>
-            <RotateCcw />
+            <ArrowCounterClockwiseIcon />
             {t("list.restore")}
           </DropdownMenuItem>
         ) : (
           <>
             <DropdownMenuItem asChild>
               <Link to="/content/$kind/$id" params={{ kind: item.kind, id: item.id }}>
-                <Pencil />
+                <PencilSimpleIcon />
                 {t("list.edit")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <a href={item.url} target="_blank" rel="noreferrer">
-                <ExternalLink />
+                <ArrowSquareOutIcon />
                 {t("list.open")}
               </a>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" disabled={!writable} onClick={() => onDelete(item)}>
-              <Trash2 />
+              <TrashIcon />
               {t("editor.delete")}
             </DropdownMenuItem>
           </>

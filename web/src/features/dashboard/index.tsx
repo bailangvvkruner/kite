@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { PenLine } from "lucide-react";
+import { PencilLineIcon } from "@phosphor-icons/react";
 
 import { useI18n, type Key } from "@/i18n";
 import { useContentTypes, useSite, useWritable } from "@/hooks/useContents";
@@ -53,7 +53,7 @@ export function Dashboard() {
             {writable && (
               <Button asChild>
                 <Link to="/content/$kind/$id" params={{ kind: primary, id: "new" }}>
-                  <PenLine />
+                  <PencilLineIcon />
                   {t("dashboard.write", { kind: kindLabel.one(primary) })}
                 </Link>
               </Button>

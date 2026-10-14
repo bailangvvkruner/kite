@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Loader2, LogIn, XCircle } from "lucide-react";
+import { CircleNotchIcon, SignInIcon, XCircleIcon } from "@phosphor-icons/react";
 
 import { ApiError } from "@/api/client";
 import { useI18n, useProblem } from "@/i18n";
@@ -88,14 +88,14 @@ export function SignIn() {
 
         {refusal && (
           <Alert variant="destructive">
-            <XCircle />
+            <XCircleIcon />
             <AlertTitle>{refusal.title}</AlertTitle>
             {refusal.detail && <AlertDescription>{refusal.detail}</AlertDescription>}
           </Alert>
         )}
 
         <Button type="submit" className="mt-2" disabled={signIn.isPending}>
-          {signIn.isPending ? <Loader2 className="animate-spin" /> : <LogIn />}
+          {signIn.isPending ? <CircleNotchIcon className="animate-spin" /> : <SignInIcon />}
           {t(signIn.isPending ? "login.submitting" : "login.submit")}
         </Button>
       </form>

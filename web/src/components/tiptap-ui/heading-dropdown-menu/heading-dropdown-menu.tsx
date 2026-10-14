@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useState } from "react"
-import { Type } from "lucide-react"
+import { TextTIcon } from "@phosphor-icons/react"
 
 import { useI18n } from "@/i18n"
 
@@ -121,7 +121,7 @@ export const HeadingDropdownMenu = forwardRef<
                 tabIndex={-1}
                 onClick={() => editor?.chain().focus().setParagraph().run()}
               >
-                <Type className="tiptap-button-icon" />
+                <TextTIcon className="tiptap-button-icon" />
                 <span className="tiptap-button-text">{t("editor.paragraph")}</span>
               </Button>
             </DropdownMenuItem>

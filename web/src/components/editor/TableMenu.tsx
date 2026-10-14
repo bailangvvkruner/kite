@@ -1,12 +1,12 @@
 import { useId, useState, type ComponentType, type KeyboardEvent } from "react";
 import type { ChainedCommands } from "@tiptap/react";
 import {
-  BetweenHorizontalEnd,
-  BetweenVerticalEnd,
-  PanelTop,
-  Table,
-  Trash2,
-} from "lucide-react";
+  RowsPlusBottomIcon,
+  ColumnsPlusRightIcon,
+  BrowserIcon,
+  TableIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 
 import { useI18n, type Key } from "@/i18n";
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
@@ -32,14 +32,14 @@ interface Action {
 // What can be done to the table the cursor is in, in two groups: adding, then removing.
 const edits: Action[][] = [
   [
-    { label: "editor.addRow", icon: BetweenHorizontalEnd, run: (chain) => chain.addRowAfter() },
-    { label: "editor.addColumn", icon: BetweenVerticalEnd, run: (chain) => chain.addColumnAfter() },
-    { label: "editor.toggleHeader", icon: PanelTop, run: (chain) => chain.toggleHeaderRow() },
+    { label: "editor.addRow", icon: RowsPlusBottomIcon, run: (chain) => chain.addRowAfter() },
+    { label: "editor.addColumn", icon: ColumnsPlusRightIcon, run: (chain) => chain.addColumnAfter() },
+    { label: "editor.toggleHeader", icon: BrowserIcon, run: (chain) => chain.toggleHeaderRow() },
   ],
   [
-    { label: "editor.deleteRow", icon: Trash2, run: (chain) => chain.deleteRow() },
-    { label: "editor.deleteColumn", icon: Trash2, run: (chain) => chain.deleteColumn() },
-    { label: "editor.deleteTable", icon: Trash2, run: (chain) => chain.deleteTable() },
+    { label: "editor.deleteRow", icon: TrashIcon, run: (chain) => chain.deleteRow() },
+    { label: "editor.deleteColumn", icon: TrashIcon, run: (chain) => chain.deleteColumn() },
+    { label: "editor.deleteTable", icon: TrashIcon, run: (chain) => chain.deleteTable() },
   ],
 ];
 
@@ -71,7 +71,7 @@ export function TableMenu() {
       aria-label={t("editor.table")}
       tooltip={t("editor.table")}
     >
-      <Table className="tiptap-button-icon" />
+      <TableIcon className="tiptap-button-icon" />
       <ChevronDownIcon className="tiptap-button-dropdown-small" />
     </Button>
   );

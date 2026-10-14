@@ -1,31 +1,31 @@
 import {
-  FileText,
-  Folder,
-  LayoutDashboard,
-  ListTree,
-  MonitorCog,
-  Newspaper,
-  Palette,
-  Puzzle,
-  Rocket,
-  SlidersHorizontal,
-  Store,
-  Tag,
-  Tags,
-} from 'lucide-react'
+  FileTextIcon,
+  FolderIcon,
+  SquaresFourIcon,
+  ListBulletsIcon,
+  MonitorIcon,
+  ArticleIcon,
+  PaletteIcon,
+  PuzzlePieceIcon,
+  RocketLaunchIcon,
+  SlidersHorizontalIcon,
+  StorefrontIcon,
+  TagIcon,
+} from '@phosphor-icons/react'
+import type { Icon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { useContentTypes, useTaxonomies } from '@/hooks/useContents'
 import { useKindLabel, useTaxonomyLabel } from '@/hooks/useKindLabel'
 import { type SidebarData } from '../types'
 
-const kindIcons: Record<string, React.ElementType> = {
-  post: Newspaper,
-  page: FileText,
+const kindIcons: Record<string, Icon> = {
+  post: ArticleIcon,
+  page: FileTextIcon,
 }
 
-const taxonomyIcons: Record<string, React.ElementType> = {
-  categories: Folder,
-  tags: Tags,
+const taxonomyIcons: Record<string, Icon> = {
+  categories: FolderIcon,
+  tags: TagIcon,
 }
 
 /**
@@ -48,7 +48,7 @@ export function useSidebarData(): SidebarData {
     navGroups: [
       {
         title: t('nav.general'),
-        items: [{ title: t('nav.dashboard'), url: '/', icon: LayoutDashboard }],
+        items: [{ title: t('nav.dashboard'), url: '/', icon: SquaresFourIcon }],
       },
       {
         title: t('nav.content'),
@@ -56,21 +56,21 @@ export function useSidebarData(): SidebarData {
           ...kinds.map((kind) => ({
             title: kindLabel.many(kind),
             url: `/content/${encodeURIComponent(kind)}`,
-            icon: kindIcons[kind] ?? FileText,
+            icon: kindIcons[kind] ?? FileTextIcon,
           })),
           ...names.map((name) => ({
             title: taxonomyLabel(name),
             url: `/taxonomies/${encodeURIComponent(name)}`,
-            icon: taxonomyIcons[name] ?? Tag,
+            icon: taxonomyIcons[name] ?? TagIcon,
           })),
         ],
       },
       {
         title: t('nav.system'),
         items: [
-          { title: t('nav.deploy'), url: '/deploy', icon: Rocket },
-          { title: t('nav.plugins'), url: '/plugins', icon: Puzzle },
-          { title: t('nav.apps'), url: '/apps', icon: Store },
+          { title: t('nav.deploy'), url: '/deploy', icon: RocketLaunchIcon },
+          { title: t('nav.plugins'), url: '/plugins', icon: PuzzlePieceIcon },
+          { title: t('nav.apps'), url: '/apps', icon: StorefrontIcon },
         ],
       },
       // Every setting is one click away rather than behind a fold. The
@@ -79,10 +79,10 @@ export function useSidebarData(): SidebarData {
         title: t('nav.settings'),
         items: [
           // The account's page is under this address too, but is not the site's.
-          { title: t('nav.site'), url: '/settings', icon: SlidersHorizontal, exact: true },
-          { title: t('nav.theme'), url: '/settings/theme', icon: Palette },
-          { title: t('nav.menus'), url: '/settings/menus', icon: ListTree },
-          { title: t('settings.interface'), url: '/settings/appearance', icon: MonitorCog },
+          { title: t('nav.site'), url: '/settings', icon: SlidersHorizontalIcon, exact: true },
+          { title: t('nav.theme'), url: '/settings/theme', icon: PaletteIcon },
+          { title: t('nav.menus'), url: '/settings/menus', icon: ListBulletsIcon },
+          { title: t('settings.interface'), url: '/settings/appearance', icon: MonitorIcon },
         ],
       },
     ],

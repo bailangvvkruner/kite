@@ -1,5 +1,5 @@
 import { useState, type ClipboardEvent, type KeyboardEvent } from "react";
-import { X } from "lucide-react";
+import { XIcon } from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +59,7 @@ export function KeywordsInput({ id, value, onChange, placeholder }: Props) {
             onClick={() => onChange(value.filter((each) => each !== word))}
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
-            <X className="size-3" />
+            <XIcon className="size-3" />
           </button>
         </Badge>
       ))}

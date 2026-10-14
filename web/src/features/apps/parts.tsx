@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpCircle, CheckCircle2, Code, Cpu, Download, Globe, Palette, Puzzle, ShieldCheck } from "lucide-react";
+import {
+  ArrowCircleUpIcon,
+  CheckCircleIcon,
+  CodeIcon,
+  CpuIcon,
+  DownloadSimpleIcon,
+  GlobeIcon,
+  PaletteIcon,
+  PuzzlePieceIcon,
+  ShieldCheckIcon,
+} from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
 import { useWritable } from "@/hooks/useContents";
@@ -24,7 +34,7 @@ export function AppScreenshot({ app, className }: { app: AppInfo; className?: st
         />
       ) : (
         <div className="flex size-full items-center justify-center text-muted-foreground">
-          <Palette className="size-6" />
+          <PaletteIcon className="size-6" />
         </div>
       )}
     </div>
@@ -54,7 +64,7 @@ function PluginIcon({ src, className }: { src?: string; className?: string }) {
       {src && !failed ? (
         <img src={src} alt="" className="size-3/4 object-contain" onError={() => setFailed(true)} />
       ) : (
-        <Puzzle className="size-1/2" />
+        <PuzzlePieceIcon className="size-1/2" />
       )}
     </div>
   );
@@ -67,7 +77,7 @@ export function StatusBadges({ app }: { app: AppInfo }) {
     <div className="flex flex-wrap gap-1.5">
       {app.official ? (
         <Badge variant="secondary" className="font-normal">
-          <ShieldCheck />
+          <ShieldCheckIcon />
           {t("apps.official")}
         </Badge>
       ) : (
@@ -77,13 +87,13 @@ export function StatusBadges({ app }: { app: AppInfo }) {
       )}
       {app.update ? (
         <Badge className="border-transparent bg-primary/10 font-normal text-primary">
-          <ArrowUpCircle />
+          <ArrowCircleUpIcon />
           {t("apps.updatable", { version: app.update })}
         </Badge>
       ) : (
         app.installed && (
           <Badge className="border-transparent bg-success/10 font-normal text-success">
-            <CheckCircle2 />
+            <CheckCircleIcon />
             {t("apps.installedVersion", { version: app.installed })}
           </Badge>
         )
@@ -115,7 +125,7 @@ export function AppAction({
   if (app.update) {
     return (
       <Button size={size} onClick={onUpdate}>
-        <ArrowUpCircle />
+        <ArrowCircleUpIcon />
         {t("apps.updateTo", { version: app.update })}
       </Button>
     );
@@ -123,7 +133,7 @@ export function AppAction({
   if (app.installed) return null;
   return (
     <Button size={size} variant="outline" disabled={!app.version} onClick={onInstall}>
-      <Download />
+      <DownloadSimpleIcon />
       {t("apps.install")}
     </Button>
   );
@@ -142,7 +152,7 @@ export function UpdateBadge({ kind, name }: { kind: AppKind; name: string }) {
   return (
     <Badge asChild className="border-transparent bg-primary/10 font-normal text-primary hover:bg-primary/15">
       <Link to="/apps" search={{ kind, id: name }}>
-        <ArrowUpCircle />
+        <ArrowCircleUpIcon />
         {t("apps.updatable", { version: app.update })}
       </Link>
     </Badge>
@@ -165,18 +175,18 @@ export function Does({
   return (
     <ul className="grid gap-1.5 text-sm text-muted-foreground">
       <li className="flex gap-2">
-        <Globe className="mt-0.5 size-4 shrink-0" />
+        <GlobeIcon className="mt-0.5 size-4 shrink-0" />
         <span>{loads.length > 0 ? t("apps.loadsFrom", { hosts: loads.join(", ") }) : t("apps.loadsNothing")}</span>
       </li>
       {plugin && (
         <li className="flex gap-2">
-          <Code className="mt-0.5 size-4 shrink-0" />
+          <CodeIcon className="mt-0.5 size-4 shrink-0" />
           <span>{t("apps.injects", { count: inject })}</span>
         </li>
       )}
       {plugin && (
         <li className="flex gap-2">
-          <Cpu className="mt-0.5 size-4 shrink-0" />
+          <CpuIcon className="mt-0.5 size-4 shrink-0" />
           <span>{hooks.length > 0 ? t("apps.runs", { hooks: hooks.join(", ") }) : t("apps.runsNothing")}</span>
         </li>
       )}

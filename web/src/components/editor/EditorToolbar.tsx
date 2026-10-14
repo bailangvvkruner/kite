@@ -9,7 +9,7 @@ import {
   type RefObject,
 } from "react";
 import { EditorContext, type ChainedCommands, type Editor } from "@tiptap/react";
-import { Ellipsis, Minus, RemoveFormatting } from "lucide-react";
+import { DotsThreeIcon, MinusIcon, TextTSlashIcon } from "@phosphor-icons/react";
 
 import { useI18n, type Key } from "@/i18n";
 import { resolveLink } from "@/lib/links";
@@ -100,8 +100,8 @@ const extras: Extra[] = [
   { tier: 5, label: "editor.quote", icon: BlockquoteIcon, keys: "mod+shift+b", run: (chain) => chain.toggleBlockquote() },
   { tier: 3, label: "editor.strike", icon: StrikeIcon, keys: "mod+shift+s", run: (chain) => chain.toggleStrike() },
   { tier: 4, label: "editor.inlineCode", icon: Code2Icon, keys: "mod+e", run: (chain) => chain.toggleCode() },
-  { tier: 1, label: "editor.divider", icon: Minus, run: (chain) => chain.setHorizontalRule() },
-  { tier: 2, label: "editor.clearFormatting", icon: RemoveFormatting, run: (chain) => chain.unsetAllMarks() },
+  { tier: 1, label: "editor.divider", icon: MinusIcon, run: (chain) => chain.setHorizontalRule() },
+  { tier: 2, label: "editor.clearFormatting", icon: TextTSlashIcon, run: (chain) => chain.unsetAllMarks() },
 ];
 const tiers = 7;
 const extra = (label: Key) => extras.find((each) => each.label === label)!;
@@ -332,7 +332,7 @@ function MoreMenu({ editor, extras }: { editor: Editor; extras: Extra[] }) {
             aria-label={t("editor.more")}
             tooltip={t("editor.more")}
           >
-            <Ellipsis className="tiptap-button-icon" />
+            <DotsThreeIcon className="tiptap-button-icon" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

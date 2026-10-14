@@ -1,15 +1,15 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  CheckCircle2,
-  ExternalLink,
-  Eye,
-  Paintbrush,
-  Palette,
-  Store,
-  TriangleAlert,
-  Upload,
-} from "lucide-react";
+  CheckCircleIcon,
+  ArrowSquareOutIcon,
+  EyeIcon,
+  PaintBrushIcon,
+  PaletteIcon,
+  StorefrontIcon,
+  WarningIcon,
+  UploadSimpleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError, type ThemeInfo } from "@/api/client";
@@ -75,7 +75,7 @@ export function Themes() {
                 </h4>
                 {writable && others.length > 0 && (
                   <Button variant="outline" size="sm" disabled={upload.busy} onClick={upload.choose}>
-                    {upload.busy ? <Spinner /> : <Upload />}
+                    {upload.busy ? <Spinner /> : <UploadSimpleIcon />}
                     {t("themes.upload")}
                   </Button>
                 )}
@@ -83,20 +83,20 @@ export function Themes() {
               {others.length === 0 ? (
                 // Only the one in use: the app center is where most come from, an upload the other way.
                 <EmptyState
-                  icon={Palette}
+                  icon={PaletteIcon}
                   title={t("themes.noOthers")}
                   note={t("themes.noOthersNote")}
                   onDrop={writable ? (file) => void upload.send(file) : undefined}
                 >
                   <Button asChild>
                     <Link to="/apps" search={{ kind: "theme" }}>
-                      <Store />
+                      <StorefrontIcon />
                       {t("themes.browse")}
                     </Link>
                   </Button>
                   {writable && (
                     <Button variant="outline" disabled={upload.busy} onClick={upload.choose}>
-                      {upload.busy ? <Spinner /> : <Upload />}
+                      {upload.busy ? <Spinner /> : <UploadSimpleIcon />}
                       {upload.sending ? t("themes.installing", { name: upload.sending.name }) : t("themes.upload")}
                     </Button>
                   )}
@@ -164,7 +164,7 @@ function Screenshot({ theme, className }: { theme: ThemeInfo; className?: string
         />
       ) : (
         <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
-          <Palette className="size-6" />
+          <PaletteIcon className="size-6" />
           <span className="text-xs">{t("themes.noScreenshot")}</span>
         </div>
       )}
@@ -184,7 +184,7 @@ function ActiveTheme({ theme }: { theme: ThemeInfo }) {
           <div className="flex flex-wrap items-center gap-2">
             <h4 className="text-lg font-semibold">{theme.title}</h4>
             <Badge className="border-transparent bg-success/10 text-success">
-              <CheckCircle2 />
+              <CheckCircleIcon />
               {t("themes.inUse")}
             </Badge>
             {!theme.builtin && <UpdateBadge kind="theme" name={theme.name} />}
@@ -215,7 +215,7 @@ function ActiveTheme({ theme }: { theme: ThemeInfo }) {
                 className="inline-flex max-w-full items-center gap-1 hover:underline"
               >
                 <span className="truncate">{theme.homepage.replace(/^https?:\/\//, "")}</span>
-                <ExternalLink className="size-3 shrink-0" />
+                <ArrowSquareOutIcon className="size-3 shrink-0" />
               </a>
             </Fact>
           )}
@@ -229,13 +229,13 @@ function ActiveTheme({ theme }: { theme: ThemeInfo }) {
         <div className="mt-auto flex flex-wrap gap-2">
           <Button asChild>
             <Link to="/settings/theme/$name/{-$section}" params={{ name: theme.name }}>
-              <Paintbrush />
+              <PaintBrushIcon />
               {t("themes.customize")}
             </Link>
           </Button>
           <Button variant="outline" asChild>
             <a href={siteHome(site.data)} target="_blank" rel="noreferrer">
-              <ExternalLink />
+              <ArrowSquareOutIcon />
               {t("themes.visit")}
             </a>
           </Button>
@@ -257,7 +257,7 @@ function Fact({ term, children }: { term: string; children: ReactNode }) {
 function ProblemNote({ problem }: { problem: string }) {
   return (
     <p className="flex gap-2 rounded-md bg-destructive/5 px-3 py-2 text-sm text-destructive">
-      <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+      <WarningIcon className="mt-0.5 size-4 shrink-0" />
       <span className="min-w-0 break-words">{problem}</span>
     </p>
   );
@@ -312,7 +312,7 @@ function ThemeCard({
           <>
             <Button variant="outline" size="sm" asChild>
               <Link to="/settings/theme/$name/{-$section}" params={{ name: theme.name }}>
-                <Eye />
+                <EyeIcon />
                 {t("themes.preview")}
               </Link>
             </Button>
@@ -329,7 +329,7 @@ function ThemeCard({
   );
 }
 
-type Upload = ReturnType<typeof useUpload>;
+type UploadSimpleIcon = ReturnType<typeof useUpload>;
 
 /**
  * useUpload installs the archive the author hands over, and asks before one
@@ -384,7 +384,7 @@ function useUpload() {
   };
 }
 
-function UploadTile({ upload }: { upload: Upload }) {
+function UploadTile({ upload }: { upload: UploadSimpleIcon }) {
   const { t } = useI18n();
   const [over, setOver] = useState(false);
   return (
@@ -408,7 +408,7 @@ function UploadTile({ upload }: { upload: Upload }) {
         over && "border-primary bg-primary/5",
       )}
     >
-      {upload.busy ? <Spinner className="size-6" /> : <Upload className="size-6" />}
+      {upload.busy ? <Spinner className="size-6" /> : <UploadSimpleIcon className="size-6" />}
       {upload.sending ? (
         <span className="text-sm text-foreground">
           {t("themes.installing", { name: upload.sending.name })}

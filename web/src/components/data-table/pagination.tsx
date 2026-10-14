@@ -1,8 +1,4 @@
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsLeftIcon,
-} from 'lucide-react'
+import { CaretLeftIcon, CaretRightIcon, CaretDoubleLeftIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -99,7 +95,7 @@ export function DataTablePagination({
             disabled={!hasPrevious}
           >
             <span className='sr-only'>{t('list.first')}</span>
-            <ChevronsLeftIcon className='h-4 w-4' />
+            <CaretDoubleLeftIcon className='h-4 w-4' />
           </Button>
           <Button
             variant='outline'
@@ -108,7 +104,7 @@ export function DataTablePagination({
             disabled={!hasPrevious}
           >
             <span className='sr-only'>{t('list.previous')}</span>
-            <ChevronLeftIcon className='h-4 w-4' />
+            <CaretLeftIcon className='h-4 w-4' />
           </Button>
           <Button
             variant='outline'
@@ -117,7 +113,7 @@ export function DataTablePagination({
             disabled={!hasNext}
           >
             <span className='sr-only'>{t('list.next')}</span>
-            <ChevronRightIcon className='h-4 w-4' />
+            <CaretRightIcon className='h-4 w-4' />
           </Button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { LogOut } from 'lucide-react'
+import { SignOutIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import useDialogState from '@/hooks/use-dialog-state'
 import { Button } from '@/components/ui/button'
@@ -70,7 +70,7 @@ export function NavUser() {
                     disabled={!account.user}
                     onClick={() => setOpen(true)}
                   >
-                    <LogOut />
+                    <SignOutIcon />
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -88,7 +88,7 @@ export function NavUser() {
               className='aria-disabled:opacity-50'
               onClick={() => account.user && setOpen(true)}
             >
-              <LogOut />
+              <SignOutIcon />
               <span>{t('session.signOut')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

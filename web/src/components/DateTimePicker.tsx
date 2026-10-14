@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarIcon } from "lucide-react";
+import { CalendarBlankIcon } from "@phosphor-icons/react";
 import { enUS, zhCN } from "react-day-picker/locale";
 
 import { useI18n } from "@/i18n";
@@ -58,7 +58,7 @@ export function DateTimePicker({
           variant="outline"
           className={cn("w-full justify-start font-normal", !at && "text-muted-foreground")}
         >
-          <CalendarIcon />
+          <CalendarBlankIcon />
           {at ? date(value, "long") : placeholder}
         </Button>
       </PopoverTrigger>

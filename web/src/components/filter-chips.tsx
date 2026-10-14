@@ -1,11 +1,11 @@
-import type { LucideIcon } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
 export interface FilterChip<T extends string> {
   value: T
   label: string
   count?: number
-  icon?: LucideIcon
+  icon?: PhosphorIcon
 }
 
 /**

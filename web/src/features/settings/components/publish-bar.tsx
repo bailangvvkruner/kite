@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CloudUpload, Upload } from "lucide-react";
+import { CloudArrowUpIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
 import { useWritable } from "@/hooks/useContents";
@@ -31,7 +31,7 @@ export function PublishBar({ className }: { className?: string }) {
           className,
         )}
       >
-        <CloudUpload className="size-4 shrink-0 text-warning" />
+        <CloudArrowUpIcon className="size-4 shrink-0 text-warning" />
         <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
           {t("publish.settingsPending")}
           {paths.map((path) => (
@@ -41,7 +41,7 @@ export function PublishBar({ className }: { className?: string }) {
           ))}
         </span>
         <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-          <Upload />
+          <UploadSimpleIcon />
           {t("publish.action")}
         </Button>
       </div>

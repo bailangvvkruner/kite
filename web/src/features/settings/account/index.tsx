@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { ImageUp, Info, KeyRound, LogOut, MonitorSmartphone, ShieldAlert, Trash2, XCircle } from "lucide-react";
+import {
+  UploadSimpleIcon,
+  InfoIcon,
+  KeyIcon,
+  SignOutIcon,
+  DevicesIcon,
+  ShieldWarningIcon,
+  TrashIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -142,7 +151,7 @@ function ProfileGroup({ account }: { account: Account }) {
               disabled={locked || upload.isPending}
               onClick={() => picker.current?.click()}
             >
-              {upload.isPending ? <Spinner /> : <ImageUp />}
+              {upload.isPending ? <Spinner /> : <UploadSimpleIcon />}
               {t(account.avatar ? "account.changeAvatar" : "account.uploadAvatar")}
             </Button>
             {account.avatar && (
@@ -153,7 +162,7 @@ function ProfileGroup({ account }: { account: Account }) {
                 disabled={locked || removeAvatar.isPending}
                 onClick={() => removeAvatar.mutate()}
               >
-                <Trash2 />
+                <TrashIcon />
                 {t("account.removeAvatar")}
               </Button>
             )}
@@ -237,7 +246,7 @@ function SetPasswordGroup({ account }: { account: Account }) {
 
   return (
     <Group id="sign-in" title={t("account.groupSignIn")}>
-      <Note icon={<ShieldAlert />}>{t("account.openNote")}</Note>
+      <Note icon={<ShieldWarningIcon />}>{t("account.openNote")}</Note>
       {account.editable ? (
         <form onSubmit={submit} className="grid gap-6">
           <Row id="user" label="account.user" help="account.userHelp">
@@ -260,7 +269,7 @@ function SetPasswordGroup({ account }: { account: Account }) {
           <Problem error={set.error} />
           <div>
             <Button type="submit" disabled={!ready || set.isPending}>
-              {set.isPending ? <Spinner /> : <KeyRound />}
+              {set.isPending ? <Spinner /> : <KeyIcon />}
               {t("account.setPassword")}
             </Button>
           </div>
@@ -377,7 +386,7 @@ function SessionsGroup({ account }: { account: Account }) {
   return (
     <Group title={t("account.groupSessions")}>
       <div className="flex items-start gap-3 rounded-md border p-4">
-        <MonitorSmartphone className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+        <DevicesIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
         <div className="grid gap-1 text-sm">
           <p>{t("account.sessionUntil", { time: date(session.expires_at, "long") })}</p>
           <p className="text-muted-foreground">
@@ -391,7 +400,7 @@ function SessionsGroup({ account }: { account: Account }) {
             {t("account.endOthers")}
           </Button>
           <Button variant="outline" onClick={() => setLeaving(true)}>
-            <LogOut />
+            <SignOutIcon />
             {t("session.signOut")}
           </Button>
         </div>
@@ -444,7 +453,7 @@ function RemoveGroup() {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-destructive/30 p-4">
         <p className="max-w-md text-sm text-muted-foreground">{t("account.removeNote")}</p>
         <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)}>
-          <Trash2 />
+          <TrashIcon />
           {t("account.remove")}
         </Button>
       </div>
@@ -494,7 +503,7 @@ function RemoveGroup() {
 function Note({ icon, children }: { icon?: ReactNode; children: ReactNode }) {
   return (
     <Alert>
-      {icon ?? <Info />}
+      {icon ?? <InfoIcon />}
       <AlertDescription>{children}</AlertDescription>
     </Alert>
   );
@@ -531,7 +540,7 @@ function Problem({ error }: { error: unknown }) {
 
   return (
     <Alert variant="destructive">
-      <XCircle />
+      <XCircleIcon />
       <AlertTitle>{said.title}</AlertTitle>
       {said.detail && <AlertDescription>{said.detail}</AlertDescription>}
     </Alert>

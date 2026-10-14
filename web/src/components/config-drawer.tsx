@@ -1,6 +1,6 @@
 import { type SVGProps } from 'react'
 import { Root as Radio, Item } from '@radix-ui/react-radio-group'
-import { CircleCheck, RotateCcw, Settings } from 'lucide-react'
+import { CheckCircleIcon, ArrowCounterClockwiseIcon, GearSixIcon } from '@phosphor-icons/react'
 import { IconLayoutCompact } from '@/assets/custom/icon-layout-compact'
 import { IconLayoutDefault } from '@/assets/custom/icon-layout-default'
 import { IconLayoutFull } from '@/assets/custom/icon-layout-full'
@@ -44,7 +44,7 @@ export function ConfigDrawer() {
           aria-label={t('config.title')}
           className='rounded-full'
         >
-          <Settings aria-hidden='true' />
+          <GearSixIcon aria-hidden='true' />
         </Button>
       </SheetTrigger>
       <SheetContent className='flex flex-col'>
@@ -80,7 +80,7 @@ function SectionTitle({
   title: string
   showReset?: boolean
   onReset?: () => void
-  /** Shown on the small per-section reset (RotateCcw) for accessibility and tests. */
+  /** Shown on the small per-section reset arrow for accessibility and tests. */
   resetAriaLabel?: string
   className?: string
 }) {
@@ -101,7 +101,7 @@ function SectionTitle({
           onClick={onReset}
           aria-label={resetAriaLabel}
         >
-          <RotateCcw className='size-3' />
+          <ArrowCounterClockwiseIcon className='size-3' />
         </Button>
       )}
     </div>
@@ -136,7 +136,7 @@ function RadioGroupItem({
         aria-hidden='false'
         aria-label={item.label}
       >
-        <CircleCheck
+        <CheckCircleIcon
           className={cn(
             'size-6 fill-primary stroke-white',
             'group-data-[state=unchecked]:hidden',

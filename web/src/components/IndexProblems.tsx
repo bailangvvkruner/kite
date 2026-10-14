@@ -1,4 +1,4 @@
-import { TriangleAlert } from "lucide-react";
+import { WarningIcon } from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
 import { useSite } from "@/hooks/useContents";
@@ -13,7 +13,7 @@ export function IndexProblems() {
 
   return (
     <Alert>
-      <TriangleAlert />
+      <WarningIcon />
       <AlertTitle>{t("problems.notIndexed", { count: problems.length })}</AlertTitle>
       <AlertDescription>
         <ul className="flex flex-col gap-0.5 font-mono text-xs">

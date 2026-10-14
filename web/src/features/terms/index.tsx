@@ -9,7 +9,15 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ExternalLink, List, Merge, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowsDownUpIcon,
+  ArrowSquareOutIcon,
+  ListIcon,
+  ArrowsMergeIcon,
+  DotsThreeIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 
 import type { components } from "@/api/client";
 import { useI18n } from "@/i18n";
@@ -137,7 +145,7 @@ export function Terms() {
           {url && (
             <Button variant="outline" asChild>
               <a href={url} target="_blank" rel="noreferrer">
-                <ExternalLink />
+                <ArrowSquareOutIcon />
                 {t("terms.viewOnSite")}
               </a>
             </Button>
@@ -161,7 +169,7 @@ export function Terms() {
               />
               <Select value={order} onValueChange={(value) => setOrder(value as Order)}>
                 <SelectTrigger size="sm" aria-label={t("terms.order")}>
-                  <ArrowUpDown />
+                  <ArrowsDownUpIcon />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -279,35 +287,35 @@ function TermCard({
               variant="ghost"
               className="-me-2 -mt-1.5 size-8 shrink-0 p-0 data-[state=open]:bg-muted"
             >
-              <MoreHorizontal className="size-4" />
+              <DotsThreeIcon className="size-4" />
               <span className="sr-only">{t("list.actions")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem asChild>
               <Link to="/content/$kind" params={{ kind }} search={items}>
-                <List />
+                <ListIcon />
                 {t("terms.viewItems", { kind: kindLabel.many(kind) })}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <a href={term.url} target="_blank" rel="noreferrer">
-                <ExternalLink />
+                <ArrowSquareOutIcon />
                 {t("list.open")}
               </a>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled={!writable} onSelect={() => onAction("rename")}>
-              <Pencil />
+              <PencilSimpleIcon />
               {t("terms.rename")}
             </DropdownMenuItem>
             <DropdownMenuItem disabled={!writable || !canMerge} onSelect={() => onAction("merge")}>
-              <Merge />
+              <ArrowsMergeIcon />
               {t("terms.merge")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" disabled={!writable} onSelect={() => onAction("remove")}>
-              <Trash2 />
+              <TrashIcon />
               {t("terms.remove")}
             </DropdownMenuItem>
           </DropdownMenuContent>

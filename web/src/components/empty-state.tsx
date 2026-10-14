@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
 /**
@@ -14,7 +14,7 @@ export function EmptyState({
   className,
   children,
 }: {
-  icon: LucideIcon
+  icon: PhosphorIcon
   title: React.ReactNode
   note?: React.ReactNode
   onDrop?: (file: File) => void
@@ -48,9 +48,7 @@ export function EmptyState({
         className
       )}
     >
-      <span className='flex size-12 items-center justify-center rounded-2xl bg-background text-muted-foreground shadow-[0_0_0_1px_var(--border)] [&_svg]:size-5'>
-        <Icon />
-      </span>
+      <Icon weight='duotone' className='size-10 text-primary' />
       <div className='grid justify-items-center gap-1'>
         <p className='font-semibold'>{title}</p>
         {note && <p className='max-w-md text-sm text-muted-foreground'>{note}</p>}

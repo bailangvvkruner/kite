@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChainedCommands, Editor } from "@tiptap/react";
-import { ChevronLeft, Eye, History, Info, Minus, Table, Type, X, XCircle } from "lucide-react";
+import {
+  CaretLeftIcon,
+  EyeIcon,
+  ClockCounterClockwiseIcon,
+  InfoIcon,
+  MinusIcon,
+  TableIcon,
+  TextTIcon,
+  XIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -290,7 +300,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
     const insert = t("editor.slash.insert");
     const headings = [HeadingOneIcon, HeadingTwoIcon, HeadingThreeIcon, HeadingFourIcon];
     return [
-      item(style, "paragraph", t("editor.paragraph"), "text p 正文 段落", Type, (chain) => chain.setParagraph()),
+      item(style, "paragraph", t("editor.paragraph"), "text p 正文 段落", TextTIcon, (chain) => chain.setParagraph()),
       ...headings.map((icon, i) => {
         const level = (i + 1) as 1 | 2 | 3 | 4;
         return item(style, `h${level}`, t("editor.headingN", { level }), `h${level} heading title 标题`, icon, (chain) =>
@@ -310,10 +320,10 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
       item(insert, "image", t("editor.image"), "img picture photo 图片 上传", ImagePlusIcon, (chain) =>
         chain.insertContent({ type: "imageUpload" }),
       ),
-      item(insert, "table", t("editor.table"), "grid 表格", Table, (chain) =>
+      item(insert, "table", t("editor.table"), "grid 表格", TableIcon, (chain) =>
         chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true }),
       ),
-      item(insert, "divider", t("editor.divider"), "hr rule line 分割线 分隔", Minus, (chain) => chain.setHorizontalRule()),
+      item(insert, "divider", t("editor.divider"), "hr rule line 分割线 分隔", MinusIcon, (chain) => chain.setHorizontalRule()),
     ];
   }, [t]);
 
@@ -354,7 +364,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
         <AppHeader />
         <Main className="flex flex-col gap-4">
           <Alert variant="destructive">
-            <XCircle />
+            <XCircleIcon />
             <AlertTitle>{t("editor.nothingToEdit")}</AlertTitle>
             <AlertDescription>
               {said && [said.title, said.detail].filter(Boolean).join(" ")}
@@ -362,7 +372,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
           </Alert>
           <Button variant="outline" className="self-start" asChild>
             <Link to="/content/$kind" params={{ kind }}>
-              <ChevronLeft />
+              <CaretLeftIcon />
               {t("editor.back")}
             </Link>
           </Button>
@@ -433,7 +443,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" className="size-8 shrink-0" asChild>
               <Link to="/content/$kind" params={{ kind }} aria-label={t("editor.back")}>
-                <ChevronLeft />
+                <CaretLeftIcon />
               </Link>
             </Button>
           </TooltipTrigger>
@@ -476,7 +486,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
             onClick={() => setPreview(!preview)}
             className="aria-pressed:bg-muted max-sm:px-2"
           >
-            <Eye className="sm:hidden" />
+            <EyeIcon className="sm:hidden" />
             <span className="max-sm:sr-only">{t("editor.preview")}</span>
           </Button>
 
@@ -518,7 +528,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
       {(item.error || uploadError) && (
         <div className="border-b px-4 py-2">
           <Alert variant="destructive">
-            <XCircle />
+            <XCircleIcon />
             <AlertTitle>
               {item.error ? problem(item.error.code, item.error.detail).title : uploadError}
             </AlertTitle>
@@ -531,7 +541,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
 
       {item.restored && (
         <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground">
-          <History className="size-3.5 shrink-0" />
+          <ClockCounterClockwiseIcon className="size-3.5 shrink-0" />
           <span className="min-w-0 flex-1 truncate">
             {t("editor.restored", { time: stamp(new Date(item.restored.at)) })}
           </span>
@@ -545,7 +555,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
             aria-label={t("editor.restoredKeep")}
             onClick={item.keepRestored}
           >
-            <X className="size-3.5" />
+            <XIcon className="size-3.5" />
           </Button>
         </div>
       )}
@@ -564,7 +574,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
 
           {mode === "source" && lost.length > 0 && (
             <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground">
-              <Info className="size-3.5 shrink-0" />
+              <InfoIcon className="size-3.5 shrink-0" />
               <span className="min-w-0 flex-1 truncate">
                 {t("editor.lossNote", { what: listOf(lost) })}
               </span>

@@ -1,4 +1,4 @@
-import { Search, X } from "lucide-react";
+import { MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 
 import type { Field } from "@/api/client";
 import { useI18n } from "@/i18n";
@@ -39,7 +39,7 @@ export function SectionNav({ sections, current, flags, query, matches, onQuery, 
   return (
     <nav aria-label={t("customize.sections")} className={cn("flex min-h-0 flex-col gap-3 p-3", className)}>
       <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
           value={query}
@@ -61,7 +61,7 @@ export function SectionNav({ sections, current, flags, query, matches, onQuery, 
             aria-label={t("customize.clearSearch")}
             onClick={() => onQuery("")}
           >
-            <X />
+            <XIcon />
           </Button>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pin } from "lucide-react";
+import { PushPinIcon } from "@phosphor-icons/react";
 
 import type { Summary } from "@/api/client";
 import { useI18n } from "@/i18n";
@@ -94,7 +94,7 @@ export function useContentsColumns({
                     </Link>
                   )}
                   {item.pinned && (
-                    <Pin className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-label={t("field.pinned")} />
+                    <PushPinIcon className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-label={t("field.pinned")} />
                   )}
                 </div>
                 {/* What the item is filed under, each term a filter: categories by
