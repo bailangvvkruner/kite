@@ -12,13 +12,13 @@ import { NavUser } from './nav-user'
 import { StudioBrand } from './studio-brand'
 
 export function AppSidebar() {
-  const { collapsible, variant } = useLayout()
+  const { collapsible } = useLayout()
   const sidebarData = useSidebarData()
   return (
-    <Sidebar collapsible={collapsible} variant={variant}>
-      {/* As tall as the top bar, so in the plain layout, the only one where
-          the two meet, its rule carries on under the brand. */}
-      <SidebarHeader className='h-16 justify-center py-0 group-data-[variant=sidebar]:border-b'>
+    // Kite: always inset, each page a sheet raised over the rail's canvas.
+    <Sidebar collapsible={collapsible} variant='inset'>
+      {/* As tall as the sheet's top bar, so the brand sits level with it. */}
+      <SidebarHeader className='h-16 justify-center py-0'>
         <StudioBrand />
       </SidebarHeader>
       <SidebarContent>
