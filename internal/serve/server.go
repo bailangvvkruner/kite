@@ -20,12 +20,16 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
+
+	_ "net/http/pprof" // rides the default mux, served only under --pprof
 
 	"github.com/kite-plus/kite/internal/api"
 	"github.com/kite-plus/kite/internal/apps"
@@ -65,6 +69,23 @@ type Options struct {
 	// change rather than one per visitor — and off by default, because a
 	// server of one's own writing rarely asks for the same page twice.
 	CachePages bool
+
+	// CacheQuery settles how a query string weighs into a cached page's key.
+	// A query a site never renders with is noise at best and a lever at
+	// worst: a flood of one-shot addresses could fill the cache and evict
+	// every real page. "ignore" folds any query into the page's path;
+	// "a,b" keeps only those parameters, folded into one spelling, so a
+	// reordered or padded asking shares one entry; "strict" — the
+	// default — keeps a page only when it was asked for plainly, without
+	// a query at all.
+	CacheQuery string
+
+	// Pprof serves Go's own instruments on a port of the loopback, for the
+	// one running the server to look at the heat of the work: the heap,
+	// the goroutines, the minutes of the CPU. It is off unless asked for,
+	// for the same door it opens for the operator it would open for
+	// whoever else found the port.
+	Pprof bool
 
 	// Drafts renders unpublished content, which a preview usually wants and a
 	// deployment never does.
@@ -135,6 +156,11 @@ type Server struct {
 	templates string
 
 	pages *pageCache
+	// cacheFold and cacheKeep are the CacheQuery policy as the asking meets
+	// it: fold sends every query to the same page, keep names the only
+	// parameters a key may carry.
+	cacheFold bool
+	cacheKeep []string
 
 	previews *previews
 }
@@ -211,8 +237,30 @@ func NewWithClock(ctx context.Context, s *site.Site, opts Options, now func() ti
 	}
 	if opts.CachePages {
 		srv.pages = newPageCache()
+		switch {
+		case opts.CacheQuery == "", opts.CacheQuery == "strict":
+		case opts.CacheQuery == "ignore":
+			srv.cacheFold = true
+		default:
+			for _, name := range strings.Split(opts.CacheQuery, ",") {
+				if name = strings.TrimSpace(name); name != "" {
+					srv.cacheKeep = append(srv.cacheKeep, name)
+				}
+			}
+		}
 	}
 	srv.previews = newPreviews(srv)
+	if opts.Pprof {
+		go func() {
+			ln, err := net.Listen("tcp", "127.0.0.1:6060")
+			if err != nil {
+				srv.log.Warn("pprof: no port", "err", err)
+				return
+			}
+			srv.log.Info("pprof listening", "addr", ln.Addr().String())
+			_ = http.Serve(ln, nil) // net/http/pprof rides the default mux
+		}()
+	}
 	srv.configHash = srv.readConfigHash()
 	srv.templates = srv.templatesStamp(s.Config)
 	if err := srv.Reload(ctx); err != nil {
@@ -722,19 +770,26 @@ func (s *Server) renderTarget(w http.ResponseWriter, r *http.Request, t build.Ta
 	// rendered, and no rendering happens at all. Asked for by many at
 	// once, it is rendered once — the first holds the address and the
 	// rest are handed what that one kept.
+	var key string
+	var keepable bool
 	if s.pages != nil {
-		key := r.URL.RequestURI()
+		key, keepable = cacheKey(r.URL.Path, r.URL.RawQuery, s.cacheFold, s.cacheKeep)
 		if page, ok := s.pages.get(key); ok {
 			w.Header().Set("X-Kite-Cache", "hit")
 			s.writePage(w, r, page, problems)
 			return
 		}
-		letGo := s.pages.hold(key)
-		defer letGo()
-		if page, ok := s.pages.get(key); ok {
-			w.Header().Set("X-Kite-Cache", "hit")
-			s.writePage(w, r, page, problems)
-			return
+		// A page asked for with a query its key cannot stand for is rendered
+		// for the asking alone: nothing of it is kept, so no flood of
+		// one-shot addresses can take a real page's place.
+		if keepable {
+			letGo := s.pages.hold(key)
+			defer letGo()
+			if page, ok := s.pages.get(key); ok {
+				w.Header().Set("X-Kite-Cache", "hit")
+				s.writePage(w, r, page, problems)
+				return
+			}
 		}
 		w.Header().Set("X-Kite-Cache", "miss")
 	}
@@ -747,16 +802,56 @@ func (s *Server) renderTarget(w http.ResponseWriter, r *http.Request, t build.Ta
 	}
 	// A page is kept only while the builder that rendered it is still the
 	// server's: one that finished after a change must not slip into the
-	// new cache as stale.
-	if s.pages != nil {
+	// new cache as stale. It is kept in the asked pool, whose small budget
+	// a flood of one-shot addresses churns without touching a page of the
+	// site — those live in the warmed pool.
+	if s.pages != nil && keepable {
 		s.mu.RLock()
 		current := s.builder
 		s.mu.RUnlock()
 		if current == builder {
-			s.pages.put(r.URL.RequestURI(), &cachedPage{status: status, body: html})
+			s.pages.putAsked(key, &cachedPage{status: status, body: html})
 		}
 	}
 	s.writePage(w, r, &cachedPage{status: status, body: html}, problems)
+}
+
+// cacheKey folds an asking's address into the key its page may live
+// under. A query a site never renders with is noise at best and a lever
+// at worst, so it is either folded away — every variant of a page shares
+// one entry — or narrowed to the parameters a site renders with, kept in
+// one spelling, so a reordered or padded asking shares one entry too.
+// A query that folds onto no key of its own does not refuse the page:
+// only its keeping, so an address asked for once — the ?x= of a
+// scraper — renders and leaves nothing behind.
+func cacheKey(path, rawQuery string, fold bool, keep []string) (key string, keepable bool) {
+	if rawQuery == "" || fold {
+		return path, true
+	}
+	if len(keep) == 0 {
+		return path, false
+	}
+	vals, err := url.ParseQuery(rawQuery)
+	if err != nil {
+		return path, false
+	}
+	for k := range vals {
+		if !slices.Contains(keep, k) {
+			return path, false
+		}
+	}
+	var b strings.Builder
+	for _, k := range keep {
+		for _, v := range vals[k] {
+			if b.Len() > 0 {
+				b.WriteByte('&')
+			}
+			b.WriteString(url.QueryEscape(k))
+			b.WriteByte('=')
+			b.WriteString(url.QueryEscape(v))
+		}
+	}
+	return path + "?" + b.String(), true
 }
 
 // writePage answers with a rendered page, fresh or kept. The live-reload

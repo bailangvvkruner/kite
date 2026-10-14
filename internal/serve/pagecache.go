@@ -13,15 +13,28 @@ import (
 // It is the server's own memory, never the browser's: the responses still
 // say no-store, because what the browser must never be left holding is
 // what the site currently is, and that is exactly what empties this.
+//
+// The keeping is two pools. One holds the pages warmed from the plan —
+// every page of the site, asked for or not — and nothing else may take a
+// place in it. The other holds what the asking itself rendered, in a
+// small budget of its own, so a flood of one-shot addresses — the ?x= of
+// a scraper — churns that pool and never evicts a page of the site.
 type pageCache struct {
+	kept   pool
+	asked pool
+
+	flightMu sync.Mutex
+	flights  map[string]*inFlight
+}
+
+// A pool is one LRU: the pages it holds, in the order they were last
+// handed out, against the budgets that bound it.
+type pool struct {
 	mu sync.Mutex
 
 	byKey map[string]*list.Element
 	order *list.List // front is the least recently used
 	bytes int
-
-	flightMu sync.Mutex
-	flights  map[string]*inFlight
 }
 
 // An inFlight is the rendering of one address in progress: asked for by
@@ -68,22 +81,27 @@ func (p *cachedPage) encoded(e Encoding) []byte {
 	return kept
 }
 
-// pageCacheBytes and pageCachePages bound the memory a walk through the
-// whole of a site can price. Oldest out first, until both hold; the one
-// page of a site whose rendering is larger than the budget is kept
-// anyway, which serves it better than evicting it in a circle would.
-// They are variables for the tests that shrink them.
+// The budgets. The warmed pool holds the whole of a site, so its bounds
+// are set for a walk through one; the asked pool holds what visitors
+// themselves brought to be rendered, so its bounds are set for a
+// curiosity, not a site. They are variables for the tests that shrink
+// them.
 var (
-	pageCacheBytes = 64 << 20
-	pageCachePages = 4096
+	keptBytes  = 64 << 20
+	keptPages  = 4096
+	askedBytes = 8 << 20
+	askedPages = 512
 )
 
 func newPageCache() *pageCache {
 	return &pageCache{
-		byKey:   make(map[string]*list.Element),
-		order:   list.New(),
 		flights: make(map[string]*inFlight),
 	}
+}
+
+func (p *pool) init() {
+	p.byKey = make(map[string]*list.Element)
+	p.order = list.New()
 }
 
 // pageEntry is a cached page with its key, so the oldest can be found
@@ -93,46 +111,74 @@ type pageEntry struct {
 	page *cachedPage
 }
 
+// get hands out the page a key names, kept first then asked — a page of
+// the site is found before a page the asking rendered — and marks it
+// recently used in the pool that holds it.
 func (c *pageCache) get(key string) (*cachedPage, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	el, ok := c.byKey[key]
+	if page, ok := c.kept.get(key); ok {
+		return page, true
+	}
+	return c.asked.get(key)
+}
+
+func (p *pool) get(key string) (*cachedPage, bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	el, ok := p.byKey[key]
 	if !ok {
 		return nil, false
 	}
-	c.order.MoveToBack(el)
+	p.order.MoveToBack(el)
 	return el.Value.(*pageEntry).page, true
 }
 
+// put keeps a page of the site, warmed from the plan.
 func (c *pageCache) put(key string, page *cachedPage) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if el, ok := c.byKey[key]; ok {
-		entry := el.Value.(*pageEntry)
-		c.bytes += len(page.body) - len(entry.page.body)
-		entry.page = page
-		c.order.MoveToBack(el)
-	} else {
-		c.byKey[key] = c.order.PushBack(&pageEntry{key: key, page: page})
-		c.bytes += len(page.body)
+	c.kept.set(key, page, keptBytes, keptPages)
+}
+
+// putAsked keeps a page the asking itself rendered, in the small pool
+// where churn costs no page of the site.
+func (c *pageCache) putAsked(key string, page *cachedPage) {
+	c.asked.set(key, page, askedBytes, askedPages)
+}
+
+func (p *pool) set(key string, page *cachedPage, maxBytes, maxPages int) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.byKey == nil {
+		p.init()
 	}
-	for (c.bytes > pageCacheBytes || c.order.Len() > pageCachePages) && c.order.Len() > 1 {
-		el := c.order.Front()
+	if el, ok := p.byKey[key]; ok {
 		entry := el.Value.(*pageEntry)
-		c.order.Remove(el)
-		delete(c.byKey, entry.key)
-		c.bytes -= len(entry.page.body)
+		p.bytes += len(page.body) - len(entry.page.body)
+		entry.page = page
+		p.order.MoveToBack(el)
+	} else {
+		p.byKey[key] = p.order.PushBack(&pageEntry{key: key, page: page})
+		p.bytes += len(page.body)
+	}
+	for (p.bytes > maxBytes || p.order.Len() > maxPages) && p.order.Len() > 1 {
+		el := p.order.Front()
+		entry := el.Value.(*pageEntry)
+		p.order.Remove(el)
+		delete(p.byKey, entry.key)
+		p.bytes -= len(entry.page.body)
 	}
 }
 
 // reset empties the cache, which a reload does: every page in it was
 // rendered from the site as it stood.
 func (c *pageCache) reset() {
-	c.mu.Lock()
-	c.byKey = make(map[string]*list.Element)
-	c.order.Init()
-	c.bytes = 0
-	c.mu.Unlock()
+	c.kept.mu.Lock()
+	c.kept.init()
+	c.kept.bytes = 0
+	c.kept.mu.Unlock()
+
+	c.asked.mu.Lock()
+	c.asked.init()
+	c.asked.bytes = 0
+	c.asked.mu.Unlock()
 }
 
 // hold locks the rendering of one address, and reports how to let it go.

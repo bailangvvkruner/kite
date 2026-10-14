@@ -77,6 +77,8 @@ func serveCommand(shape commandShape) *cobra.Command {
 		admin  bool
 		write  bool
 		cache  bool
+		cacheQuery string
+		pprof  bool
 		open   bool
 		quiet  bool
 	)
@@ -143,6 +145,8 @@ func serveCommand(shape commandShape) *cobra.Command {
 				Auth:        guard,
 				Write:       write,
 				CachePages:  cache,
+				CacheQuery:  cacheQuery,
+				Pprof:       pprof,
 				Logger:      log,
 			})
 			if err != nil {
@@ -209,6 +213,8 @@ func serveCommand(shape commandShape) *cobra.Command {
 	cmd.Flags().BoolVar(&admin, "admin", shape.defaultAdmin, "serve the read model API")
 	cmd.Flags().BoolVar(&write, "write", shape.defaultWrite, "let the API change the project")
 	cmd.Flags().BoolVar(&cache, "cache", false, "keep what a page answered and hand it to the next asking, until a change")
+	cmd.Flags().StringVar(&cacheQuery, "cache-query", "strict", `with --cache: "ignore" folds any query into the page's key, "a,b" keeps only those parameters, "strict" keeps only plain asks`)
+	cmd.Flags().BoolVar(&pprof, "pprof", false, "serve Go's profilers on 127.0.0.1:6060 — heap, goroutines, CPU — for looking at the heat of the work")
 	cmd.Flags().BoolVar(&open, "open", shape.open, "open the site in a browser")
 	cmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "only log warnings and errors")
 	return cmd
