@@ -12,18 +12,17 @@ import {
 import { KiteMark } from '@/components/KiteMark'
 
 /**
- * SiteBrand heads the rail with the site this studio edits and leads back to
+ * StudioBrand heads the rail with Kite's name and version and leads back to
  * the dashboard. It takes the place of shadcn-admin's team switcher: a studio
- * has one site, so there is nothing to switch to, and the site's own links
- * sit on the dashboard and under settings. A studio nobody signs in to says
- * so beside the site's name, as does one that takes no changes.
+ * has one site, so there is nothing to switch to. The site's name is left to
+ * the dashboard, as a long one crowded the rail. A studio nobody signs in to
+ * says so beside the name, as does one that takes no changes.
  */
-export function SiteBrand() {
+export function StudioBrand() {
   const { t } = useI18n()
   const { setOpenMobile } = useSidebar()
   const site = useSite()
   const session = useSession()
-  const title = site.data?.title ?? 'Kite'
   const local = session.data?.required === false
   const readOnly = !useWritable()
   const marks = [local && t('session.local'), readOnly && t('session.readOnly')].filter(Boolean)
@@ -33,7 +32,7 @@ export function SiteBrand() {
       <SidebarMenuItem>
         <SidebarMenuButton
           size='lg'
-          tooltip={[title, ...marks].join(' · ')}
+          tooltip={['Kite', ...marks].join(' · ')}
           asChild
         >
           <Link to='/' onClick={() => setOpenMobile(false)}>
@@ -44,15 +43,16 @@ export function SiteBrand() {
             </span>
             <div className='grid flex-1 text-start leading-tight'>
               <span className='flex min-w-0 items-center gap-1.5'>
-                <span className='truncate text-base font-semibold'>{title}</span>
+                <span className='truncate text-base font-semibold'>Kite</span>
                 {marks.map((mark) => (
                   <Badge key={String(mark)} variant='secondary' className='shrink-0 px-1.5 py-0 text-[11px] font-normal'>
                     {mark}
                   </Badge>
                 ))}
               </span>
+              {/* A space holds the line while the version loads. */}
               <span className='truncate text-xs text-muted-foreground'>
-                Kite {site.data?.version ?? ''}
+                {site.data?.version ?? ' '}
               </span>
             </div>
           </Link>

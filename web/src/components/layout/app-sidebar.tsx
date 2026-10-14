@@ -9,7 +9,7 @@ import {
 import { useSidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
 import { NavUser } from './nav-user'
-import { SiteBrand } from './site-brand'
+import { StudioBrand } from './studio-brand'
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout()
@@ -17,7 +17,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
-        <SiteBrand />
+        <StudioBrand />
       </SidebarHeader>
       <SidebarContent>
         {sidebarData.navGroups.map((props) => (
