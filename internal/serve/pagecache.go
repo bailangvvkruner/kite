@@ -35,10 +35,37 @@ type inFlight struct {
 
 // A cachedPage is one rendered page as it will be written out, before the
 // live-reload script is injected: the injection is of the moment, the
-// page is of the build.
+// page is of the build. Each compression the page is asked for is made
+// once and kept beside it, so the second visitor to ask the same way is
+// handed the same bytes the first one was.
 type cachedPage struct {
 	status int
 	body   []byte
+
+	mu        sync.Mutex
+	encodings map[Encoding][]byte
+}
+
+// encoded returns the page in the way asked, compressing it once if the
+// way is one this server speaks and the page is large enough to be worth
+// carrying compressed. The memory of the kept encodings is not counted
+// against the cache's budget: it is a fraction of the body it came from,
+// and the page count bounds it.
+func (p *cachedPage) encoded(e Encoding) []byte {
+	if e == EncodingIdentity || len(p.body) < worthCompressing {
+		return p.body
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.encodings == nil {
+		p.encodings = make(map[Encoding][]byte, len(wanted))
+	}
+	if kept, ok := p.encodings[e]; ok {
+		return kept
+	}
+	kept := encode(p.body, e)
+	p.encodings[e] = kept
+	return kept
 }
 
 // pageCacheBytes and pageCachePages bound the memory a walk through the
@@ -63,21 +90,21 @@ func newPageCache() *pageCache {
 // from the order alone.
 type pageEntry struct {
 	key  string
-	page cachedPage
+	page *cachedPage
 }
 
-func (c *pageCache) get(key string) (cachedPage, bool) {
+func (c *pageCache) get(key string) (*cachedPage, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	el, ok := c.byKey[key]
 	if !ok {
-		return cachedPage{}, false
+		return nil, false
 	}
 	c.order.MoveToBack(el)
 	return el.Value.(*pageEntry).page, true
 }
 
-func (c *pageCache) put(key string, page cachedPage) {
+func (c *pageCache) put(key string, page *cachedPage) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if el, ok := c.byKey[key]; ok {

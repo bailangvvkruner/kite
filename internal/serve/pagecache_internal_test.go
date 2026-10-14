@@ -13,14 +13,14 @@ func TestPageCachePutsAndGets(t *testing.T) {
 	if _, ok := c.get("/posts/a/"); ok {
 		t.Fatal("an empty cache handed out a page")
 	}
-	c.put("/posts/a/", cachedPage{status: 200, body: []byte("<html>a")})
+	c.put("/posts/a/", &cachedPage{status: 200, body: []byte("<html>a")})
 
 	page, ok := c.get("/posts/a/")
 	if !ok || page.status != 200 || !bytes.Equal(page.body, []byte("<html>a")) {
-		t.Fatalf("got %v, %v", page, ok)
+		t.Fatalf("got status %d body %q, %v", page.status, page.body, ok)
 	}
 
-	c.put("/posts/a/", cachedPage{status: 200, body: []byte("<html>a2")})
+	c.put("/posts/a/", &cachedPage{status: 200, body: []byte("<html>a2")})
 	if page, _ = c.get("/posts/a/"); string(page.body) != "<html>a2" {
 		t.Fatalf("a page put again did not replace: %q", page.body)
 	}
@@ -35,12 +35,12 @@ func TestPageCacheEvictsTheLeastRecentlyUsed(t *testing.T) {
 	pageCachePages = 3
 
 	for _, key := range []string{"/a/", "/b/", "/c/"} {
-		c.put(key, cachedPage{status: 200, body: []byte("x")})
+		c.put(key, &cachedPage{status: 200, body: []byte("x")})
 	}
 	if _, ok := c.get("/a/"); !ok { // a is now the most recently used
 		t.Fatal("a was not in the cache")
 	}
-	c.put("/d/", cachedPage{status: 200, body: []byte("x")}) // b is the oldest now
+	c.put("/d/", &cachedPage{status: 200, body: []byte("x")}) // b is the oldest now
 
 	for gone, there := range map[string]bool{"/a/": true, "/b/": false, "/c/": true, "/d/": true} {
 		if _, ok := c.get(gone); ok != there {
@@ -53,7 +53,7 @@ func TestPageCacheEvictsTheLeastRecentlyUsed(t *testing.T) {
 // as it stood had rendered.
 func TestPageCacheReset(t *testing.T) {
 	c := newPageCache()
-	c.put("/a/", cachedPage{status: 200, body: []byte("x")})
+	c.put("/a/", &cachedPage{status: 200, body: []byte("x")})
 	c.reset()
 	if _, ok := c.get("/a/"); ok {
 		t.Fatal("a page survived the reset")
@@ -71,7 +71,7 @@ func TestPageCacheKeepsOneOversizePage(t *testing.T) {
 	defer func() { pageCacheBytes = saved }()
 	pageCacheBytes = 8
 
-	c.put("/big/", cachedPage{status: 200, body: []byte("0123456789")})
+	c.put("/big/", &cachedPage{status: 200, body: []byte("0123456789")})
 	if _, ok := c.get("/big/"); !ok {
 		t.Fatal("the only page was evicted for being larger than the budget")
 	}
@@ -80,12 +80,12 @@ func TestPageCacheKeepsOneOversizePage(t *testing.T) {
 // The pages of one build cannot be told apart by their asking alone.
 func TestPageCacheKeysDifferByQuery(t *testing.T) {
 	c := newPageCache()
-	c.put("/?page=2", cachedPage{status: 200, body: []byte("two")})
+	c.put("/?page=2", &cachedPage{status: 200, body: []byte("two")})
 	if page, ok := c.get("/"); ok {
 		t.Fatalf("the first page got the second's bytes: %q", page.body)
 	}
 	if page, ok := c.get("/?page=2"); !ok || string(page.body) != "two" {
-		t.Fatalf("got %v, %v", page, ok)
+		t.Fatalf("got status %d body %q, %v", page.status, page.body, ok)
 	}
 }
 

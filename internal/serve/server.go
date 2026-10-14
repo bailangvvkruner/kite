@@ -321,7 +321,7 @@ func (s *Server) warm(ctx context.Context, builder *build.Builder, plan *build.P
 		if t.Kind == render.KindNotFound {
 			status = http.StatusNotFound
 		}
-		s.pages.put(t.URL, cachedPage{status: status, body: html})
+		s.pages.put(t.URL, &cachedPage{status: status, body: html})
 		done++
 	}
 	s.log.Info("pages warmed", "count", done, "took", time.Since(started).Round(time.Millisecond))
@@ -726,14 +726,14 @@ func (s *Server) renderTarget(w http.ResponseWriter, r *http.Request, t build.Ta
 		key := r.URL.RequestURI()
 		if page, ok := s.pages.get(key); ok {
 			w.Header().Set("X-Kite-Cache", "hit")
-			s.writePage(w, r, page.status, page.body, problems)
+			s.writePage(w, r, page, problems)
 			return
 		}
 		letGo := s.pages.hold(key)
 		defer letGo()
 		if page, ok := s.pages.get(key); ok {
 			w.Header().Set("X-Kite-Cache", "hit")
-			s.writePage(w, r, page.status, page.body, problems)
+			s.writePage(w, r, page, problems)
 			return
 		}
 		w.Header().Set("X-Kite-Cache", "miss")
@@ -753,17 +753,26 @@ func (s *Server) renderTarget(w http.ResponseWriter, r *http.Request, t build.Ta
 		current := s.builder
 		s.mu.RUnlock()
 		if current == builder {
-			s.pages.put(r.URL.RequestURI(), cachedPage{status: status, body: html})
+			s.pages.put(r.URL.RequestURI(), &cachedPage{status: status, body: html})
 		}
 	}
-	s.writePage(w, r, status, html, problems)
+	s.writePage(w, r, &cachedPage{status: status, body: html}, problems)
 }
 
 // writePage answers with a rendered page, fresh or kept. The live-reload
-// script is of the moment, so it is injected here, after the keeping.
-func (s *Server) writePage(w http.ResponseWriter, r *http.Request, status int, html []byte, problems []string) {
+// script is of the moment, so it is injected here, after the keeping —
+// and a page carrying it is sent as it is, for the same reason: what a
+// reload must refresh is not a thing to compress once and hand out many
+// times. Every other page is sent the way its asking takes, compressed
+// once and kept beside it so.
+func (s *Server) writePage(w http.ResponseWriter, r *http.Request, page *cachedPage, problems []string) {
+	html := page.body
+	e := EncodingIdentity
 	if s.opts.LiveReload {
 		html = inject(html, problems)
+	} else {
+		e = negotiate(r.Header.Get("Accept-Encoding"))
+		html = page.encoded(e)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -771,7 +780,14 @@ func (s *Server) writePage(w http.ResponseWriter, r *http.Request, status int, h
 	// A preview that served a stale page from the browser cache would defeat
 	// the point of watching the filesystem at all.
 	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(status)
+	// The answer depends on what the asking said it would take, so any
+	// cache between this server and the browser must keep the askings
+	// apart.
+	w.Header().Add("Vary", "Accept-Encoding")
+	if e != EncodingIdentity {
+		w.Header().Set("Content-Encoding", string(e))
+	}
+	w.WriteHeader(page.status)
 
 	if r.Method != http.MethodHead {
 		_, _ = w.Write(html)
@@ -800,7 +816,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, within, root string, rout
 				w.Header().Set("Content-Type", ctype)
 			}
 			w.Header().Set("Cache-Control", "no-store")
-			http.ServeContent(w, r, rel, modTime, bytes.NewReader(data))
+			serveBytes(w, r, rel, modTime, data)
 			return true
 		}
 	}
@@ -814,10 +830,29 @@ func serveFile(w http.ResponseWriter, r *http.Request, within, root string, rout
 			w.Header().Set("Content-Type", ctype)
 		}
 		w.Header().Set("Cache-Control", "no-store")
-		http.ServeContent(w, r, rel, modTime, bytes.NewReader(data))
+		serveBytes(w, r, rel, modTime, data)
 		return true
 	}
 	return false
+}
+
+// serveBytes writes a file a build would copy, compressed when it is one
+// of the kinds compression carries and the asking takes it. A file sent
+// compressed is sent whole: ranges belong to the answer that has them,
+// and no browser asks a range of what it would have taken whole.
+func serveBytes(w http.ResponseWriter, r *http.Request, name string, modTime time.Time, data []byte) {
+	e := EncodingIdentity
+	if textLike(path.Ext(name)) {
+		e = negotiate(r.Header.Get("Accept-Encoding"))
+	}
+	w.Header().Add("Vary", "Accept-Encoding")
+	if e == EncodingIdentity || len(data) < worthCompressing {
+		e = EncodingIdentity
+	} else {
+		w.Header().Set("Content-Encoding", string(e))
+		data = encode(data, e)
+	}
+	http.ServeContent(w, r, name, modTime, bytes.NewReader(data))
 }
 
 // serveMade answers for a picture a template had made, which a build writes
