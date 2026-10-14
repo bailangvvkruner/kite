@@ -3,7 +3,11 @@ import type { ReactNode } from "react";
 import { useI18n, type Key } from "@/i18n";
 import { Label } from "@/components/ui/label";
 
-/** Group is a titled part of a settings form, drawn as theme settings draw a section. */
+/**
+ * Group is a titled part of a settings form, a card on the sheet as the
+ * deploy page's parts are. The card wraps the fieldset rather than being it,
+ * since a bordered fieldset draws its legend over its own border.
+ */
 export function Group({
   id,
   title,
@@ -16,13 +20,15 @@ export function Group({
   children: ReactNode;
 }) {
   return (
-    <fieldset id={id} className="grid scroll-mt-4 gap-6">
-      <legend className="mb-6 w-full border-b pb-2">
-        <span className="text-sm font-semibold">{title}</span>
-        {note && <p className="mt-0.5 text-sm text-muted-foreground">{note}</p>}
-      </legend>
-      {children}
-    </fieldset>
+    <div id={id} className="scroll-mt-4 rounded-xl border bg-card p-5 sm:p-6">
+      <fieldset className="grid gap-6">
+        <legend className="mb-5 w-full">
+          <span className="font-semibold">{title}</span>
+          {note && <p className="mt-1 text-sm text-muted-foreground">{note}</p>}
+        </legend>
+        {children}
+      </fieldset>
+    </div>
   );
 }
 

@@ -1,4 +1,3 @@
-import { Separator } from '@/components/ui/separator'
 import { ReadOnlyNote } from '@/components/read-only-note'
 import { cn } from '@/lib/utils'
 import { PublishBar } from './publish-bar'
@@ -21,11 +20,10 @@ export function ContentSection({ title, desc, children, wide, writes }: ContentS
     // Positioned, so the scroll area's fade ends at the column's foot, above
     // the studio's footer rather than over it.
     <div className='relative flex flex-1 flex-col overflow-hidden'>
-      <div className='flex-none space-y-0.5'>
+      <div className='mb-5 flex-none'>
         <h1 className='text-2xl font-semibold tracking-tight sm:text-[1.625rem]'>{title}</h1>
         <p className='mt-1 text-sm text-muted-foreground'>{desc}</p>
       </div>
-      <Separator className='my-4 flex-none lg:my-6' />
       {writes && <ReadOnlyNote className='mb-4 flex-none' />}
       <PublishBar />
       {/* The bottom padding is the fade's height, so a form's last control,

@@ -41,7 +41,7 @@ export function MenuSettings() {
         {!form.loaded ? (
           <Skeleton className="h-72 w-full" />
         ) : (
-          <fieldset disabled={!writable} className="grid gap-10">
+          <fieldset disabled={!writable} className="grid gap-5">
             {drawn.length === 0 && (
               <div className="rounded-lg border border-dashed px-4 py-6 text-center">
                 <p className="text-sm font-medium">{t("menus.none")}</p>

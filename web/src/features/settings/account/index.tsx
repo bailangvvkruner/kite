@@ -53,7 +53,7 @@ export function AccountSettings() {
   return (
     <ContentSection title={t("settings.account")} desc={t("settings.accountNote")}>
       {account.data ? (
-        <div className="grid gap-10">
+        <div className="grid gap-5">
           <ProfileGroup account={account.data} />
           {account.data.protected ? (
             <SignInGroup account={account.data} />

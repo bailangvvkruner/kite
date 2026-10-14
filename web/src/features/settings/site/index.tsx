@@ -66,7 +66,7 @@ export function SiteSettings() {
         {!form.loaded ? (
           <Skeleton className="h-72 w-full" />
         ) : (
-          <fieldset disabled={!writable} className="grid gap-10">
+          <fieldset disabled={!writable} className="grid gap-5">
             <Group title={t("settings.groupBasics")}>
               <Row id="title" label="settings.siteTitle">
                 <Input id="title" value={values.title ?? ""} onChange={(event) => set("title", event.target.value)} />

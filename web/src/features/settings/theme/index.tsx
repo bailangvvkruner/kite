@@ -6,6 +6,7 @@ import {
   Eye,
   Paintbrush,
   Palette,
+  Store,
   TriangleAlert,
   Upload,
 } from "lucide-react";
@@ -29,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { EmptyState } from "@/components/empty-state";
 import { RemoveButton } from "@/components/remove-button";
 import { QueryError } from "@/components/query-error";
 import { UpdateBadge } from "@/features/apps/parts";
@@ -71,25 +73,48 @@ export function Themes() {
                   {t("themes.others")}
                   <span className="ms-1.5 font-normal text-muted-foreground tabular-nums">{others.length}</span>
                 </h4>
-                {writable && (
+                {writable && others.length > 0 && (
                   <Button variant="outline" size="sm" disabled={upload.busy} onClick={upload.choose}>
                     {upload.busy ? <Spinner /> : <Upload />}
                     {t("themes.upload")}
                   </Button>
                 )}
               </div>
-              <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))]">
-                {others.map((theme) => (
-                  <ThemeCard
-                    key={theme.name}
-                    theme={theme}
-                    writable={writable}
-                    onUse={() => setUsing(theme)}
-                    onRemove={() => setRemoving(theme)}
-                  />
-                ))}
-                {writable && <UploadTile upload={upload} empty={others.length === 0} />}
-              </div>
+              {others.length === 0 ? (
+                // Only the one in use: the app center is where most come from, an upload the other way.
+                <EmptyState
+                  icon={Palette}
+                  title={t("themes.noOthers")}
+                  note={t("themes.noOthersNote")}
+                  onDrop={writable ? (file) => void upload.send(file) : undefined}
+                >
+                  <Button asChild>
+                    <Link to="/apps" search={{ kind: "theme" }}>
+                      <Store />
+                      {t("themes.browse")}
+                    </Link>
+                  </Button>
+                  {writable && (
+                    <Button variant="outline" disabled={upload.busy} onClick={upload.choose}>
+                      {upload.busy ? <Spinner /> : <Upload />}
+                      {upload.sending ? t("themes.installing", { name: upload.sending.name }) : t("themes.upload")}
+                    </Button>
+                  )}
+                </EmptyState>
+              ) : (
+                <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(15rem,1fr))]">
+                  {others.map((theme) => (
+                    <ThemeCard
+                      key={theme.name}
+                      theme={theme}
+                      writable={writable}
+                      onUse={() => setUsing(theme)}
+                      onRemove={() => setRemoving(theme)}
+                    />
+                  ))}
+                  {writable && <UploadTile upload={upload} />}
+                </div>
+              )}
             </section>
           </>
         )}
@@ -359,7 +384,7 @@ function useUpload() {
   };
 }
 
-function UploadTile({ upload, empty }: { upload: Upload; empty: boolean }) {
+function UploadTile({ upload }: { upload: Upload }) {
   const { t } = useI18n();
   const [over, setOver] = useState(false);
   return (
@@ -391,10 +416,8 @@ function UploadTile({ upload, empty }: { upload: Upload; empty: boolean }) {
         </span>
       ) : (
         <>
-          <span className="text-sm font-medium text-foreground">
-            {empty ? t("themes.noOthers") : t("themes.upload")}
-          </span>
-          <span className="max-w-60 text-xs">{empty ? t("themes.noOthersNote") : t("themes.dropZip")}</span>
+          <span className="text-sm font-medium text-foreground">{t("themes.upload")}</span>
+          <span className="max-w-60 text-xs">{t("themes.dropZip")}</span>
         </>
       )}
     </button>
