@@ -264,3 +264,24 @@ cargo new kiters --workspace
 
 M2(serve:ArcSwap 快照 + watch 增量 + 压缩协商 + 双池缓存键归一)
 从本文档 §1.2 抄行为契约即可,钩子点火点不变。
+
+## 12. 热状图与首批实测数字(2026-10-14 追记)
+
+仪器(已入库 21bcd33):CLI 带 `--cpuprofile`(Go pprof 格式)、`--flamegraph`(SVG)、
+`--stats`(峰值内存,Linux 读 /proc VmHWM)。pprof-rs 走 POSIX 信号采样,
+glibc Linux 可用;**musl 静态二进制上信号内回溯空转(566 样本零帧,
+开帧指针也无效)——静态部署用 perf:`perf record -F 399 -g --call-graph fp`,
+符号全开**。
+
+真实站点首跑(服务器,只读 /data,产物写 /tmp):
+
+- 22 项(3 草稿正确排除)→ 23 页,**63ms**,峰值内存 **83MB**
+  (Go kite 同站 192MB:静态编译 + 无 GC 余量,顺手赢 2.3×)
+
+放大站(400 篇拷贝):404 页 **576ms**,峰值 103MB。
+
+热图判词(400 篇站,perf):热路径 = comrak markdown→HTML
+(memcpy 9.75% + malloc 4.84% + free 3.67% + parse 2.70% + utf8 2.48%
++ format_node 2.44%),其余噪声。优化方向已定:渲染缓冲复用/arena,
+别的都不用看。
+
