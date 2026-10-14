@@ -28,7 +28,9 @@ export function ContentSection({ title, desc, children, wide, writes }: ContentS
       <Separator className='my-4 flex-none lg:my-6' />
       {writes && <ReadOnlyNote className='mb-4 flex-none' />}
       <PublishBar />
-      <div className='faded-bottom h-full w-full overflow-y-auto scroll-smooth pe-4 pb-12'>
+      {/* The bottom padding is the fade's height, so a form's last control,
+          usually Save, scrolls clear of it instead of looking disabled. */}
+      <div className='faded-bottom h-full w-full overflow-y-auto scroll-smooth pe-4 pb-32'>
         <div className={cn('-mx-1 px-1.5', !wide && 'lg:max-w-2xl')}>{children}</div>
       </div>
     </div>
