@@ -26,3 +26,27 @@ export function StatusLabel({ status, className }: { status: string; className?:
     </span>
   );
 }
+
+// A pill's tint, by the same rule as the label's color.
+const pills: Record<string, string> = {
+  published: "bg-success/10 text-success",
+  scheduled: "bg-info/10 text-info",
+  draft: "bg-muted text-muted-foreground",
+  archived: "bg-muted text-muted-foreground",
+};
+
+/** A status as a tinted pill with its name, for rows where an icon would crowd. */
+export function StatusPill({ status, className }: { status: string; className?: string }) {
+  const { t } = useI18n();
+  return (
+    <span
+      className={cn(
+        "inline-flex h-6 items-center rounded-md px-2 text-xs font-medium whitespace-nowrap",
+        pills[status] ?? pills.draft,
+        className,
+      )}
+    >
+      {t(`status.${status}` as Key)}
+    </span>
+  );
+}

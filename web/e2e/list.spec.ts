@@ -15,7 +15,7 @@ function searchOf(page: Page): Record<string, unknown> {
   return out;
 }
 
-/** choose picks an option of one of the listing's filters, and closes it again. */
+/** choose picks an option of one of the listing's term filters, and closes it again. */
 async function choose(page: Page, filter: string, option: RegExp) {
   await page.getByRole("button", { name: filter }).click();
   await page.getByRole("option", { name: option }).click();
@@ -27,7 +27,7 @@ test("filters, order and page size live in the address and survive a reload", as
   await page.goto("/admin/content/post");
   await expect(page.getByText("32 items")).toBeVisible();
 
-  await choose(page, "Status", /^Published/);
+  await page.getByRole("button", { name: /^Published \d+$/ }).click();
   await choose(page, "Tags", /^garden/);
   await page.getByRole("button", { name: "Title", exact: true }).click();
   await page.getByRole("menuitem", { name: "Ascending" }).click();
@@ -51,7 +51,7 @@ test("filters, order and page size live in the address and survive a reload", as
   await expect(page.getByRole("link", { name: "Garden note 01" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Garden draft A" })).toBeHidden();
   await expect(page.getByRole("combobox")).toHaveText("10");
-  await expect(page.getByRole("button", { name: "Status" })).toContainText("Published");
+  await expect(page.getByRole("button", { name: /^Published \d+$/ })).toHaveAttribute("aria-pressed", "true");
 });
 
 test("a batch delete reports the item changed on disk and trashes the rest", async ({ page, site }) => {

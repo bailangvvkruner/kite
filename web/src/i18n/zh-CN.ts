@@ -191,6 +191,7 @@ export const zhCN: Record<keyof typeof en, string> = {
   "list.title": "标题",
   "list.status": "状态",
   "list.noDate": "未设置",
+  "list.allStatuses": "全部",
   "list.publishedAt": "发布时间",
   "list.updatedAt": "更新时间",
   "list.clearFilter": "清除这个筛选",

@@ -197,6 +197,7 @@ export const en = {
   "list.title": "Title",
   "list.status": "Status",
   "list.noDate": "Not set",
+  "list.allStatuses": "All",
   "list.publishedAt": "Published",
   "list.updatedAt": "Updated",
   "list.clearFilter": "Clear this filter",

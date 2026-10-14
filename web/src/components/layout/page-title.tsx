@@ -12,8 +12,8 @@ export function PageTitle({
   return (
     <div className='flex flex-wrap items-end justify-between gap-2'>
       <div>
-        <h2 className='text-2xl font-bold tracking-tight'>{title}</h2>
-        {description && <p className='text-muted-foreground'>{description}</p>}
+        <h2 className='text-2xl font-semibold tracking-tight sm:text-[1.625rem]'>{title}</h2>
+        {description && <p className='mt-1 text-sm text-muted-foreground'>{description}</p>}
       </div>
       {children && <div className='flex flex-wrap gap-2'>{children}</div>}
     </div>

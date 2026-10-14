@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -33,12 +33,10 @@ function apply<T>(updater: Updater<T>, current: T): T {
   return typeof updater === "function" ? (updater as (old: T) => T)(current) : updater;
 }
 
-/** One choice in a facet: a status or a term. */
-interface FacetOption {
+/** One of the tabs a listing is narrowed to a status by; no value is every status. */
+export interface StatusTab {
+  value?: string;
   label: string;
-  value: string;
-  icon?: ComponentType<{ className?: string }>;
-  className?: string;
   count?: number;
 }
 
@@ -51,7 +49,8 @@ interface Props {
   /** sort is the order in force, the kind's default when the address has none. */
   sort: string;
   taxonomies: string[];
-  statusOptions: FacetOption[];
+  /** statusTabs pick one status at a time; a trash listing has none. */
+  statusTabs?: StatusTab[];
   termOptions: Record<string, { label: string; value: string; count: number }[]>;
   rowSelection: RowSelectionState;
   onRowSelectionChange: OnChangeFn<RowSelectionState>;
@@ -75,7 +74,7 @@ export function ContentsTable({
   onSearch,
   sort,
   taxonomies,
-  statusOptions,
+  statusTabs,
   termOptions,
   rowSelection,
   onRowSelectionChange,
@@ -87,7 +86,11 @@ export function ContentsTable({
 }: Props) {
   const { t } = useI18n();
   const taxonomyLabel = useTaxonomyLabel();
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  // The terms show under each title, so their own columns start folded away;
+  // the view menu brings them back.
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
+    Object.fromEntries(taxonomies.map((taxonomy) => [taxonomy, false])),
+  );
 
   // What is typed is shown at once and asked of the server once typing stops,
   // so a slow answer for an old prefix cannot replace a fresh one.
@@ -147,11 +150,39 @@ export function ContentsTable({
         "flex flex-1 flex-col gap-4",
       )}
     >
+      {statusTabs && (
+        <div role="group" aria-label={t("list.status")} className="flex flex-wrap gap-1.5">
+          {statusTabs.map((tab) => {
+            const on = tab.value
+              ? search.status?.length === 1 && search.status[0] === tab.value
+              : !search.status?.length;
+            return (
+              <button
+                key={tab.value ?? "all"}
+                type="button"
+                aria-pressed={on}
+                onClick={() => onSearch({ status: tab.value ? [tab.value] : undefined })}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors",
+                  on ? "bg-foreground font-medium text-background" : "bg-muted text-foreground/80 hover:bg-accent",
+                )}
+              >
+                {tab.label}
+                {tab.count !== undefined && (
+                  <>
+                    {" "}
+                    <span className="tabular-nums opacity-70">{tab.count}</span>
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <DataTableToolbar
         table={table}
         searchPlaceholder={searchPlaceholder}
         filters={[
-          { columnId: "status", title: t("list.status"), options: statusOptions },
           ...taxonomies
             .filter((taxonomy) => termOptions[taxonomy]?.length)
             .map((taxonomy) => ({
@@ -161,16 +192,17 @@ export function ContentsTable({
             })),
         ]}
       />
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-hidden rounded-xl border">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/40">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
                     className={cn(
+                      "h-10 text-xs font-normal text-muted-foreground",
                       header.column.columnDef.meta?.className,
                       header.column.columnDef.meta?.thClassName,
                     )}
@@ -205,6 +237,7 @@ export function ContentsTable({
                       key={cell.id}
                       data-row-skip={cell.column.columnDef.meta?.skipRowLink || undefined}
                       className={cn(
+                        "py-2.5",
                         cell.column.columnDef.meta?.className,
                         cell.column.columnDef.meta?.tdClassName,
                       )}

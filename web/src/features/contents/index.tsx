@@ -33,7 +33,6 @@ import { PageTitle } from "@/components/layout/page-title";
 import { PublishDialog } from "@/components/publish/PublishDialog";
 import { QueryError } from "@/components/query-error";
 import { ReadOnlyNote } from "@/components/read-only-note";
-import { statuses } from "@/components/StatusLabel";
 import { useContentsColumns } from "./components/contents-columns";
 import { ContentsTable } from "./components/contents-table";
 import { DEFAULT_PAGE_SIZE, defaultSort, termsOf, withTerms, type ContentSearch } from "./search";
@@ -199,14 +198,18 @@ export function ContentList() {
   );
 
   const unfiltered = !search.status?.length && !search.q && !search.terms?.length;
-  // The counts are of what is not deleted, so the trash's facet goes without.
-  const statusOptions = STATUSES.map((status) => ({
-    label: t(`status.${status}` as Key),
-    value: status,
-    icon: statuses[status].icon,
-    className: statuses[status].className,
-    count: trashed ? undefined : counts[status],
-  }));
+  // The counts are of what is not deleted, so the trash has no tabs. Archived
+  // shows only once something is.
+  const statusTabs = trashed
+    ? undefined
+    : [
+        { label: t("list.allStatuses"), count: counts.all },
+        ...STATUSES.filter((status) => status !== "archived" || counts.archived).map((status) => ({
+          value: status,
+          label: t(`status.${status}` as Key),
+          count: counts[status],
+        })),
+      ];
   const total = page.data?.total;
 
   return (
@@ -300,7 +303,7 @@ export function ContentList() {
             onSearch={onSearch}
             sort={sort}
             taxonomies={taxonomies}
-            statusOptions={statusOptions}
+            statusTabs={statusTabs}
             termOptions={termOptions}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
