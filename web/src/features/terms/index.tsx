@@ -267,7 +267,7 @@ function TermCard({
   return (
     <div
       onClick={followRowLink}
-      className="flex cursor-pointer flex-col gap-3 rounded-xl border bg-card p-4 text-card-foreground shadow-xs transition-colors hover:bg-accent/40"
+      className="flex cursor-pointer flex-col gap-3 rounded-xl border bg-card p-4 text-card-foreground transition-colors hover:bg-muted/50"
     >
       <div className="flex items-start justify-between gap-2">
         <Link to="/content/$kind" params={{ kind }} search={items} data-row-link className="min-w-0">

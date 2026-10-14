@@ -22,8 +22,8 @@ export function ContentSection({ title, desc, children, wide, writes }: ContentS
     // the studio's footer rather than over it.
     <div className='relative flex flex-1 flex-col overflow-hidden'>
       <div className='flex-none space-y-0.5'>
-        <h1 className='text-2xl font-bold tracking-tight md:text-3xl'>{title}</h1>
-        <p className='text-muted-foreground'>{desc}</p>
+        <h1 className='text-2xl font-semibold tracking-tight sm:text-[1.625rem]'>{title}</h1>
+        <p className='mt-1 text-sm text-muted-foreground'>{desc}</p>
       </div>
       <Separator className='my-4 flex-none lg:my-6' />
       {writes && <ReadOnlyNote className='mb-4 flex-none' />}
