@@ -59,6 +59,13 @@ type Options struct {
 	// Watch reindexes and replans when the project changes.
 	Watch bool
 
+	// CachePages keeps what a page answered and hands the next asking of
+	// the same address the same bytes, until a change empties it. It is
+	// what a server standing in front of a site wants — one rendering per
+	// change rather than one per visitor — and off by default, because a
+	// server of one's own writing rarely asks for the same page twice.
+	CachePages bool
+
 	// Drafts renders unpublished content, which a preview usually wants and a
 	// deployment never does.
 	Drafts bool
@@ -126,6 +133,8 @@ type Server struct {
 	// keeps every template it has parsed, so an edited or replaced one needs
 	// the site assembled again, as a settings change does.
 	templates string
+
+	pages *pageCache
 
 	previews *previews
 }
@@ -200,6 +209,9 @@ func NewWithClock(ctx context.Context, s *site.Site, opts Options, now func() ti
 		log:     opts.Logger,
 		now:     now,
 	}
+	if opts.CachePages {
+		srv.pages = newPageCache()
+	}
 	srv.previews = newPreviews(srv)
 	srv.configHash = srv.readConfigHash()
 	srv.templates = srv.templatesStamp(s.Config)
@@ -265,6 +277,11 @@ func (s *Server) reload(ctx context.Context) error {
 	s.mu.Lock()
 	s.builder, s.problems, s.due = builder, problems, due
 	s.extras = &extras{builder: builder, plan: plan, log: s.log}
+	// Every cached page was rendered from the site as it stood, so the
+	// change that swapped the builder empties them with it.
+	if s.pages != nil {
+		s.pages.reset()
+	}
 	s.mu.Unlock()
 
 	s.log.Info("site loaded", "routes", s.router.size())
@@ -661,12 +678,41 @@ func (s *Server) renderTarget(w http.ResponseWriter, r *http.Request, t build.Ta
 	builder, problems := s.builder, s.problems
 	s.mu.RUnlock()
 
+	// The cache sits before the rendering, not beside it: a page asked for
+	// again between two changes is handed the bytes the first asking
+	// rendered, and no rendering happens at all.
+	if s.pages != nil {
+		if page, ok := s.pages.get(r.URL.RequestURI()); ok {
+			w.Header().Set("X-Kite-Cache", "hit")
+			s.writePage(w, r, page.status, page.body, problems)
+			return
+		}
+		w.Header().Set("X-Kite-Cache", "miss")
+	}
+
 	html, _, err := builder.Render(r.Context(), t, render.NewRequest(r))
 	if err != nil {
 		s.log.Error("render failed", "url", r.URL.Path, "err", err)
 		http.Error(w, "render failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+	// A page is kept only while the builder that rendered it is still the
+	// server's: one that finished after a change must not slip into the
+	// new cache as stale.
+	if s.pages != nil {
+		s.mu.RLock()
+		current := s.builder
+		s.mu.RUnlock()
+		if current == builder {
+			s.pages.put(r.URL.RequestURI(), cachedPage{status: status, body: html})
+		}
+	}
+	s.writePage(w, r, status, html, problems)
+}
+
+// writePage answers with a rendered page, fresh or kept. The live-reload
+// script is of the moment, so it is injected here, after the keeping.
+func (s *Server) writePage(w http.ResponseWriter, r *http.Request, status int, html []byte, problems []string) {
 	if s.opts.LiveReload {
 		html = inject(html, problems)
 	}

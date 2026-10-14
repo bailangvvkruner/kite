@@ -76,6 +76,7 @@ func serveCommand(shape commandShape) *cobra.Command {
 		drafts bool
 		admin  bool
 		write  bool
+		cache  bool
 		open   bool
 		quiet  bool
 	)
@@ -134,14 +135,15 @@ func serveCommand(shape commandShape) *cobra.Command {
 			guard := auth.New(account)
 
 			srv, err := serve.New(ctx, s, serve.Options{
-				Addr:       listenAddr,
-				LiveReload: reload,
-				Watch:      watch,
-				Drafts:     drafts,
-				Admin:      admin,
-				Auth:       guard,
-				Write:      write,
-				Logger:     log,
+				Addr:        listenAddr,
+				LiveReload:  reload,
+				Watch:       watch,
+				Drafts:      drafts,
+				Admin:       admin,
+				Auth:        guard,
+				Write:       write,
+				CachePages:  cache,
+				Logger:      log,
 			})
 			if err != nil {
 				return err
@@ -206,6 +208,7 @@ func serveCommand(shape commandShape) *cobra.Command {
 	cmd.Flags().BoolVar(&drafts, "drafts", shape.defaultDrafts, "include unpublished content")
 	cmd.Flags().BoolVar(&admin, "admin", shape.defaultAdmin, "serve the read model API")
 	cmd.Flags().BoolVar(&write, "write", shape.defaultWrite, "let the API change the project")
+	cmd.Flags().BoolVar(&cache, "cache", false, "keep what a page answered and hand it to the next asking, until a change")
 	cmd.Flags().BoolVar(&open, "open", shape.open, "open the site in a browser")
 	cmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "only log warnings and errors")
 	return cmd
