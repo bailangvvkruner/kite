@@ -5,7 +5,9 @@ import {
   Cpu,
   ExternalLink,
   Globe,
+  Puzzle,
   Settings2,
+  Store,
   TriangleAlert,
   Upload,
 } from "lucide-react";
@@ -30,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { EmptyState } from "@/components/empty-state";
 import { RemoveButton } from "@/components/remove-button";
 import { AppHeader } from "@/components/layout/app-header";
 import { Main } from "@/components/layout/main";
@@ -57,7 +60,7 @@ export function Plugins() {
       <AppHeader />
       <Main className="flex flex-1 flex-col gap-4 sm:gap-6">
         <PageTitle title={t("nav.plugins")} description={t("plugins.note")}>
-          {writable && (
+          {writable && (plugins.data?.length ?? 0) > 0 && (
             <Button variant="outline" disabled={upload.busy} onClick={upload.choose}>
               {upload.busy ? <Spinner /> : <Upload />}
               {t("plugins.upload")}
@@ -74,12 +77,33 @@ export function Plugins() {
             <Skeleton className="h-44 rounded-xl" />
             <Skeleton className="h-44 rounded-xl" />
           </div>
+        ) : plugins.data.length === 0 ? (
+          // None yet: the app center is where most come from, an upload the other way.
+          <EmptyState
+            icon={Puzzle}
+            title={t("plugins.none")}
+            note={t("plugins.noneNote")}
+            onDrop={writable ? (file) => void upload.send(file) : undefined}
+          >
+            <Button asChild>
+              <Link to="/apps" search={{ kind: "plugin" }}>
+                <Store />
+                {t("plugins.browse")}
+              </Link>
+            </Button>
+            {writable && (
+              <Button variant="outline" disabled={upload.busy} onClick={upload.choose}>
+                {upload.busy ? <Spinner /> : <Upload />}
+                {upload.sending ? t("plugins.installing", { name: upload.sending }) : t("plugins.upload")}
+              </Button>
+            )}
+          </EmptyState>
         ) : (
           <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
             {plugins.data.map((plugin) => (
               <PluginCard key={plugin.id} plugin={plugin} onRemove={() => setRemoving(plugin)} />
             ))}
-            {writable && <UploadTile upload={upload} empty={plugins.data.length === 0} />}
+            {writable && <UploadTile upload={upload} />}
           </div>
         )}
 
@@ -259,7 +283,7 @@ function useUpload() {
   };
 }
 
-function UploadTile({ upload, empty }: { upload: Upload; empty: boolean }) {
+function UploadTile({ upload }: { upload: Upload }) {
   const { t } = useI18n();
   const [over, setOver] = useState(false);
   return (
@@ -288,10 +312,8 @@ function UploadTile({ upload, empty }: { upload: Upload; empty: boolean }) {
         <span className="text-sm text-foreground">{t("plugins.installing", { name: upload.sending })}</span>
       ) : (
         <>
-          <span className="text-sm font-medium text-foreground">
-            {empty ? t("plugins.none") : t("plugins.upload")}
-          </span>
-          <span className="max-w-64 text-xs">{empty ? t("plugins.noneNote") : t("plugins.dropZip")}</span>
+          <span className="text-sm font-medium text-foreground">{t("plugins.upload")}</span>
+          <span className="max-w-64 text-xs">{t("plugins.dropZip")}</span>
         </>
       )}
     </button>
