@@ -1,6 +1,19 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { CircleAlert, CircleCheck, Download, GitBranch, Info, Pin, XCircle } from "lucide-react";
+import {
+  CircleAlert,
+  CircleCheck,
+  CloudUpload,
+  Download,
+  ExternalLink,
+  FileArchive,
+  GitBranch,
+  Info,
+  Package,
+  Pin,
+  Upload,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -15,7 +28,6 @@ import { sizeOf } from "@/lib/bytes";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +37,9 @@ import { PasswordInput } from "@/components/password-input";
 import { AppHeader } from "@/components/layout/app-header";
 import { Main } from "@/components/layout/main";
 import { PageTitle } from "@/components/layout/page-title";
-import { DeliveryStages } from "@/components/publish/Delivery";
+import { SectionCard } from "@/components/section-card";
+import { DeliveryProgress, PublishProblems } from "@/components/publish/Delivery";
+import { PublishDialog } from "@/components/publish/PublishDialog";
 import { PublishBar } from "@/features/settings/components/publish-bar";
 
 /**
@@ -40,14 +54,18 @@ export function Deploy() {
   return (
     <>
       <AppHeader />
-      <Main className="flex flex-1 flex-col gap-4 sm:gap-6">
+      <Main className="flex flex-1 flex-col gap-5">
         <PageTitle title={t("nav.deploy")} description={t("deploy.note")} />
-        <div className="grid max-w-3xl gap-4 sm:gap-6">
-          <PublishBar className="mb-0 lg:mb-0" />
-          <ExportCard />
+        <PublishBar className="mb-0 lg:mb-0" />
+        {/* How far the last change has gone leads, across the sheet; the ways
+            to set up and to export follow side by side. */}
+        <PushCard />
+        <div className="grid items-start gap-5 xl:grid-cols-2">
           <GitHubCard />
-          <PushCard />
-          <KiteCard />
+          <div className="grid gap-5">
+            <ExportCard />
+            <KiteCard />
+          </div>
         </div>
       </Main>
     </>
@@ -80,12 +98,8 @@ function ExportCard() {
         : null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("deploy.export")}</CardTitle>
-        <CardDescription>{t("deploy.exportNote")}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4">
+    <SectionCard icon={FileArchive} title={t("deploy.export")} description={t("deploy.exportNote")}>
+      <div className="grid gap-4">
         {site.isPending ? (
           <Skeleton className="h-16 w-full" />
         ) : (
@@ -119,8 +133,8 @@ function ExportCard() {
             {t(exporting.isPending ? "deploy.exporting" : "deploy.exportAction")}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -171,12 +185,8 @@ function GitHubCard() {
       : problem(connect.error instanceof ApiError ? connect.error.code : undefined, connect.error.message);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("deploy.github")}</CardTitle>
-        <CardDescription>{t("deploy.githubNote")}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 text-sm">
+    <SectionCard icon={GitBranch} title={t("deploy.github")} description={t("deploy.githubNote")}>
+      <div className="grid gap-4 text-sm">
         {!state ? (
           <Skeleton className="h-24 w-full" />
         ) : (
@@ -292,8 +302,8 @@ function GitHubCard() {
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -332,24 +342,56 @@ function PushCard() {
   const { t } = useI18n();
   const delivery = useDelivery();
   const publish = usePublish([]);
+  const writable = useWritable();
+  const [publishing, setPublishing] = useState(false);
+  const dirty = delivery.data?.dirty ?? [];
   const host = hosts[delivery.data?.deploy_host ?? ""];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("deploy.push")}</CardTitle>
-        <CardDescription>{t("deploy.pushNote")}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 text-sm">
+    <SectionCard icon={CloudUpload} title={t("deploy.push")} description={t("deploy.pushNote")}>
+      <div className="grid gap-4 text-sm">
         {delivery.isPending ? (
           <Skeleton className="h-24 w-full" />
         ) : canPublish(delivery.data) ? (
           <>
-            <div className="grid gap-1 text-muted-foreground">
-              <p>{t("deploy.pushReady")}</p>
-              {host && <p>{t("deploy.host", { host })}</p>}
+            <div className="rounded-xl bg-muted/50 px-2 pt-5 pb-4">
+              <DeliveryProgress delivery={delivery.data} />
             </div>
-            <DeliveryStages delivery={delivery.data} publish={publish} />
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+              <div className="grid min-w-0 flex-1 gap-1 text-muted-foreground">
+                <p>{t("deploy.pushReady")}</p>
+                {host && <p>{t("deploy.host", { host })}</p>}
+              </div>
+              {writable && dirty.length > 0 ? (
+                <Button onClick={() => setPublishing(true)}>
+                  <Upload />
+                  {t("publish.publishAll", { count: dirty.length })}
+                </Button>
+              ) : writable && delivery.data?.ahead ? (
+                <Button disabled={publish.pending} onClick={() => void publish.push()}>
+                  {publish.pending ? <Spinner /> : <Upload />}
+                  {t("publish.pushCommits", { count: delivery.data.ahead })}
+                </Button>
+              ) : null}
+              {delivery.data?.deployed === "done" && delivery.data.deployed_url && (
+                <Button variant="outline" asChild>
+                  <a href={delivery.data.deployed_url} target="_blank" rel="noreferrer">
+                    <ExternalLink />
+                    {t("publish.viewSite")}
+                  </a>
+                </Button>
+              )}
+            </div>
+            <PublishProblems publish={publish} />
+            <PublishDialog
+              ids={[]}
+              paths={dirty}
+              open={publishing}
+              onOpenChange={setPublishing}
+              onDone={() => undefined}
+              title={t("publish.allTitle")}
+              description={t("publish.allNote", { paths: dirty.join(", ") })}
+            />
           </>
         ) : (
           <>
@@ -374,8 +416,8 @@ function PushCard() {
             </ol>
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -414,12 +456,8 @@ function KiteCard() {
       : null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("deploy.kite")}</CardTitle>
-        <CardDescription>{t("deploy.kiteNote")}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 text-sm">
+    <SectionCard icon={Package} title={t("deploy.kite")} description={t("deploy.kiteNote")}>
+      <div className="grid gap-4 text-sm">
         {!kite ? (
           <Skeleton className="h-12 w-full" />
         ) : (
@@ -449,8 +487,8 @@ function KiteCard() {
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }
 
