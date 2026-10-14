@@ -16,7 +16,9 @@ export function AppSidebar() {
   const sidebarData = useSidebarData()
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
-      <SidebarHeader>
+      {/* As tall as the top bar, so in the plain layout, the only one where
+          the two meet, its rule carries on under the brand. */}
+      <SidebarHeader className='h-16 justify-center py-0 group-data-[variant=sidebar]:border-b'>
         <StudioBrand />
       </SidebarHeader>
       <SidebarContent>

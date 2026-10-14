@@ -19,14 +19,21 @@ export function StudioBrand() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton size='lg' tooltip='Kite' asChild>
+        <SidebarMenuButton
+          size='lg'
+          tooltip='Kite'
+          asChild
+          className='gap-2.5 hover:bg-transparent active:bg-transparent group-data-[collapsible=icon]:justify-center'
+        >
           <Link to='/' onClick={() => setOpenMobile(false)}>
             {/* Wrapped, as the button would size a bare svg down to 16px. The
-                mark's own margin is pulled in to line up with the rail's icons. */}
-            <span className='-ms-1.5 flex shrink-0 group-data-[collapsible=icon]:ms-0'>
-              <KiteMark className='size-10 group-data-[collapsible=icon]:size-8' />
+                tight mark starts where the rail's icons do. */}
+            <span className='flex shrink-0'>
+              <KiteMark tight className='h-6 w-auto group-data-[collapsible=icon]:h-5' />
             </span>
-            <span className='truncate text-xl font-semibold'>Kite</span>
+            <span className='font-serif text-[21px] leading-none font-bold tracking-[0.02em] group-data-[collapsible=icon]:hidden'>
+              Kite
+            </span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
