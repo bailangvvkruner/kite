@@ -26,7 +26,7 @@ export function StudioBrand() {
             <span className='-ms-1.5 flex shrink-0 group-data-[collapsible=icon]:ms-0'>
               <KiteMark className='size-10 group-data-[collapsible=icon]:size-8' />
             </span>
-            <span className='truncate text-base font-semibold'>Kite</span>
+            <span className='truncate text-xl font-semibold'>Kite</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
