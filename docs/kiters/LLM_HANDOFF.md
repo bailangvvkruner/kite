@@ -229,3 +229,38 @@ cargo new kiters --workspace
 
 记住纲领:**正确性靠构造,不靠约定。** 每写一块,先问"Go 版这里靠什么纪律
 防错",然后把那个纪律变成类型、生命周期或所有权。
+
+---
+
+## 11. 动工实录(M1 已落,2026-10-14)
+
+仓库:**github.com/bailangvvkg/kiters**(与本文档同日动工,提交 e7f4d82)
+
+已落地:
+
+- 工作区四 crate + 一 CLI:`kiters-core`(类型 + Hook API)、
+  `kiters-parse`(walk/front matter/钩子埋点)、`kiters-render`
+  (comrak + minijinja 内置布局)、`kiters-build`(计划 + 预渲染编排)、
+  `apps/kiters-cli`。
+- **七点全链钩子**(§2 的深化,已实测):`on_discover`(可 skip 文件)→
+  `on_front_matter`(可改 slug/状态)→ `on_markdown`(可改正文)→
+  `on_target`(可改地址/撤页)→ `on_html` → `on_page`(页面字节末权)→
+  `on_build_complete`(只读报告)。链式有序,首个错误终止并具名
+  "hook <名字> failed at <时刻>"。事件载荷带 `&mut`(含 veto 的 `&mut bool`)。
+- 预渲染全站:文章页 + 首页 + 404 + sitemap + RSS;草稿全程排除
+  (与 §1.4 私密语义一致)。fixture 中文站实测:
+  `3 项(1 草稿)→ 6 页,2ms`。
+- 5 项测试全绿:整站构建(草稿不落盘/sitemap/RSS/首页均无踪)、CLI、
+  钩子改写正文、钩子否决目标、钩子失败具名、事件载荷。
+
+实现注记:
+
+- 开发机无 MSVC/Windows SDK:用 gnu 工具链 + `link-self-contained=yes`
+  + `rust-lld`(见仓库 `.cargo/config.toml`,原因写在注释里)。
+- comrak 0.24:`#[non_exhaustive]`,选项须 `Options::default()` 后改字段;
+  代码块语言类名(`language-rust`)内置输出,无需高亮适配器。
+- minijinja:`.html` 模板名自动转义,注入 body 必须 `| safe`。
+- 配置兼容读 `kite.yaml` 或 `kiters.yaml` 的 `site:` 表。
+
+M2(serve:ArcSwap 快照 + watch 增量 + 压缩协商 + 双池缓存键归一)
+从本文档 §1.2 抄行为契约即可,钩子点火点不变。
