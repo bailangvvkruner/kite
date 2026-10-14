@@ -284,8 +284,47 @@ func (s *Server) reload(ctx context.Context) error {
 	}
 	s.mu.Unlock()
 
+	// With the cache on, the pages are not left for the first visitor of
+	// each to pay for: the plan is walked in the background and every
+	// page rendered into the cache, so a change has already paid for the
+	// next asking of every address by the time anyone asks.
+	if s.pages != nil {
+		go s.warm(context.WithoutCancel(ctx), builder, plan)
+	}
+
 	s.log.Info("site loaded", "routes", s.router.size())
 	return nil
+}
+
+// warm renders every page of the plan into the cache. It is the same
+// rendering a build does — no request is passed, so a page warmed is
+// byte for byte what building it writes, and a template that branched
+// on the live request could not be built either. It stops the moment a
+// newer builder takes over, so two changes in a row warm once, for the
+// second.
+func (s *Server) warm(ctx context.Context, builder *build.Builder, plan *build.Plan) {
+	started := time.Now()
+	var done int
+	for _, t := range plan.Targets {
+		s.mu.RLock()
+		current := s.builder
+		s.mu.RUnlock()
+		if current != builder {
+			return
+		}
+		html, _, err := builder.Render(ctx, t, nil)
+		if err != nil {
+			s.log.Warn("warm: page not rendered", "url", t.URL, "err", err)
+			continue
+		}
+		status := http.StatusOK
+		if t.Kind == render.KindNotFound {
+			status = http.StatusNotFound
+		}
+		s.pages.put(t.URL, cachedPage{status: status, body: html})
+		done++
+	}
+	s.log.Info("pages warmed", "count", done, "took", time.Since(started).Round(time.Millisecond))
 }
 
 // Handler returns the HTTP handler, which is also what the tests drive.
@@ -680,9 +719,19 @@ func (s *Server) renderTarget(w http.ResponseWriter, r *http.Request, t build.Ta
 
 	// The cache sits before the rendering, not beside it: a page asked for
 	// again between two changes is handed the bytes the first asking
-	// rendered, and no rendering happens at all.
+	// rendered, and no rendering happens at all. Asked for by many at
+	// once, it is rendered once — the first holds the address and the
+	// rest are handed what that one kept.
 	if s.pages != nil {
-		if page, ok := s.pages.get(r.URL.RequestURI()); ok {
+		key := r.URL.RequestURI()
+		if page, ok := s.pages.get(key); ok {
+			w.Header().Set("X-Kite-Cache", "hit")
+			s.writePage(w, r, page.status, page.body, problems)
+			return
+		}
+		letGo := s.pages.hold(key)
+		defer letGo()
+		if page, ok := s.pages.get(key); ok {
 			w.Header().Set("X-Kite-Cache", "hit")
 			s.writePage(w, r, page.status, page.body, problems)
 			return

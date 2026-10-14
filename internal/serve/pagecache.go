@@ -19,6 +19,18 @@ type pageCache struct {
 	byKey map[string]*list.Element
 	order *list.List // front is the least recently used
 	bytes int
+
+	flightMu sync.Mutex
+	flights  map[string]*inFlight
+}
+
+// An inFlight is the rendering of one address in progress: asked for by
+// many at once, a page is rendered once and the answer handed to them
+// all. The count says how many hold it or are waiting to, so the entry
+// leaves the map when the last of them is done.
+type inFlight struct {
+	mu   sync.Mutex
+	held int
 }
 
 // A cachedPage is one rendered page as it will be written out, before the
@@ -40,7 +52,11 @@ var (
 )
 
 func newPageCache() *pageCache {
-	return &pageCache{byKey: make(map[string]*list.Element), order: list.New()}
+	return &pageCache{
+		byKey:   make(map[string]*list.Element),
+		order:   list.New(),
+		flights: make(map[string]*inFlight),
+	}
 }
 
 // pageEntry is a cached page with its key, so the oldest can be found
@@ -86,8 +102,33 @@ func (c *pageCache) put(key string, page cachedPage) {
 // rendered from the site as it stood.
 func (c *pageCache) reset() {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.byKey = make(map[string]*list.Element)
 	c.order.Init()
 	c.bytes = 0
+	c.mu.Unlock()
+}
+
+// hold locks the rendering of one address, and reports how to let it go.
+// The holder looks in the cache again once it holds: someone may have
+// finished the same rendering while it waited.
+func (c *pageCache) hold(key string) func() {
+	c.flightMu.Lock()
+	f, ok := c.flights[key]
+	if !ok {
+		f = &inFlight{}
+		c.flights[key] = f
+	}
+	f.held++
+	c.flightMu.Unlock()
+
+	f.mu.Lock()
+	return func() {
+		f.mu.Unlock()
+		c.flightMu.Lock()
+		f.held--
+		if f.held == 0 {
+			delete(c.flights, key)
+		}
+		c.flightMu.Unlock()
+	}
 }

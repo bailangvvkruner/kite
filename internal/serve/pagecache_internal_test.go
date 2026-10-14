@@ -3,6 +3,7 @@ package serve
 import (
 	"bytes"
 	"testing"
+	"time"
 )
 
 // The cache hands back the bytes that were put in, and the asking for it
@@ -85,5 +86,34 @@ func TestPageCacheKeysDifferByQuery(t *testing.T) {
 	}
 	if page, ok := c.get("/?page=2"); !ok || string(page.body) != "two" {
 		t.Fatalf("got %v, %v", page, ok)
+	}
+}
+
+// The hold of one address is one at a time, and the map of holds empties
+// when the last of them lets go.
+func TestPageCacheHoldSerializesOneAddress(t *testing.T) {
+	c := newPageCache()
+	letGo := c.hold("/posts/a/")
+	in := make(chan struct{})
+	go func() {
+		c.hold("/posts/a/")() // waits for the first to let go
+		close(in)
+	}()
+	select {
+	case <-in:
+		t.Fatal("a second hold of one address did not wait")
+	case <-time.After(50 * time.Millisecond):
+	}
+	letGo()
+	select {
+	case <-in:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the second hold was not let in after the first let go")
+	}
+	c.flightMu.Lock()
+	held := len(c.flights)
+	c.flightMu.Unlock()
+	if held != 0 {
+		t.Fatalf("holds left behind: %d", held)
 	}
 }

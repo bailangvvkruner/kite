@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/kite-plus/kite/internal/serve"
 	"github.com/kite-plus/kite/internal/site"
@@ -142,6 +144,61 @@ func TestCachedServingIsByteIdenticalToBuilt(t *testing.T) {
 	}
 	if checked < 10 {
 		t.Fatalf("only %d pages compared; the fixture is not exercising enough of the site", checked)
+	}
+}
+
+// A change does not leave its pages for the first visitor of each to
+// pay for: the warming that follows a reload has rendered them by the
+// time anyone asks, and the first asking is as cheap as the rest.
+func TestTheWarmingAnswersTheFirstAsking(t *testing.T) {
+	root := newProject(t, 2)
+	handler := newServer(t, root, serve.Options{CachePages: true}).Handler()
+
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/posts/post-00/", nil))
+		if rec.Header().Get("X-Kite-Cache") == "hit" {
+			if !strings.Contains(rec.Body.String(), "Post 00") {
+				t.Fatal("a hit that is not the page")
+			}
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the warming never answered the first asking")
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+// Asked for by many at once, a page is rendered once: every answer is the
+// same and none is a failure.
+func TestManyAtOnceAreAnsweredAlike(t *testing.T) {
+	root := newProject(t, 2)
+	handler := newServer(t, root, serve.Options{CachePages: true}).Handler()
+
+	const askers = 8
+	var wg sync.WaitGroup
+	bodies := make([]string, askers)
+	codes := make([]int, askers)
+	for i := range askers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/posts/post-01/", nil))
+			bodies[i] = rec.Body.String()
+			codes[i] = rec.Code
+		}()
+	}
+	wg.Wait()
+	for i := range askers {
+		if codes[i] != http.StatusOK {
+			t.Fatalf("asker %d: status %d", i, codes[i])
+		}
+		if bodies[i] != bodies[0] {
+			t.Fatalf("asker %d was answered differently", i)
+		}
 	}
 }
 
