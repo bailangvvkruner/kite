@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useSidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
+import { NavPublish } from './nav-publish'
 import { NavUser } from './nav-user'
 import { StudioBrand } from './studio-brand'
 
@@ -27,6 +28,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
+        <NavPublish />
         <NavUser />
       </SidebarFooter>
       <SidebarRail />

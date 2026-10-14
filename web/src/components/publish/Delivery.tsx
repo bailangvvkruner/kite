@@ -91,6 +91,18 @@ export function pausedAt(delivery: DeliveryState | undefined, locale: string): s
   return new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(when);
 }
 
+/** checkedAgo says how long since the remote was last looked at. */
+export function checkedAgo(iso: string | undefined, locale: string, t: Translate): string | null {
+  if (!iso) return null;
+  const seconds = (Date.now() - Date.parse(iso)) / 1000;
+  if (!Number.isFinite(seconds)) return null;
+  if (seconds < 60) return t("publish.checkedNow");
+  const minutes = Math.round(seconds / 60);
+  const words = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  const when = minutes < 60 ? words.format(-minutes, "minute") : words.format(-Math.round(minutes / 60), "hour");
+  return t("publish.checked", { when });
+}
+
 function stepLabel(step: Step["key"], standing: Standing): Key {
   return `publish.step.${step}.${standing}` as Key;
 }

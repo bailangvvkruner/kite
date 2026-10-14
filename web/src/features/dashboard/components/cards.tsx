@@ -30,7 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { DeliveryProgress, PublishProblems, pausedAt } from "@/components/publish/Delivery";
+import { DeliveryProgress, PublishProblems, checkedAgo, pausedAt } from "@/components/publish/Delivery";
 import { PublishDialog } from "@/components/publish/PublishDialog";
 import { QueryError } from "@/components/query-error";
 import { TermBadge } from "@/components/TermBadge";
@@ -98,7 +98,7 @@ export function DeliveryCard() {
   const { t, locale } = useI18n();
   const delivery = useDelivery();
   const d = delivery.data;
-  const checked = ago(d?.checked_at, locale, t);
+  const checked = checkedAgo(d?.checked_at, locale, t);
 
   return (
     <Card>
@@ -281,22 +281,6 @@ function Headline({ delivery: d }: { delivery: DeliveryState }) {
       </div>
     </div>
   );
-}
-
-/** ago says how long since the remote was last looked at. */
-function ago(
-  iso: string | undefined,
-  locale: string,
-  t: ReturnType<typeof useI18n>["t"],
-): string | null {
-  if (!iso) return null;
-  const seconds = (Date.now() - Date.parse(iso)) / 1000;
-  if (!Number.isFinite(seconds)) return null;
-  if (seconds < 60) return t("publish.checkedNow");
-  const minutes = Math.round(seconds / 60);
-  const words = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-  const when = minutes < 60 ? words.format(-minutes, "minute") : words.format(-Math.round(minutes / 60), "hour");
-  return t("publish.checked", { when });
 }
 
 /** TopTerms are the tags used most, each opening the listing it narrows to. */
