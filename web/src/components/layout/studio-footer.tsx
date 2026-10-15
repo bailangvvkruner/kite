@@ -25,12 +25,14 @@ export function StudioFooter({ className }: { className?: string }) {
     >
       <p className='flex min-w-0 items-center gap-2'>
         <KiteMark tight className='h-[15px] w-auto' />
-        <Outside href={website} className='font-medium text-foreground/80'>
+        {/* The version is kept to the hover, for whoever reports an issue. */}
+        <Outside
+          href={website}
+          title={version && `Kite ${version}`}
+          className='font-medium text-foreground/80'
+        >
           {t('footer.poweredBy')}
         </Outside>
-        {version && (
-          <span className='truncate rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs'>{version}</span>
-        )}
       </p>
       {/* Each link is a quiet button, so its padding is pulled back out to
           line the links up with the rule's end, and on a phone, where they
@@ -58,16 +60,19 @@ const link =
 
 function Outside({
   href,
+  title,
   className,
   children,
 }: {
   href: string
+  title?: string
   className?: string
   children: React.ReactNode
 }) {
   return (
     <a
       href={href}
+      title={title}
       target='_blank'
       rel='noreferrer'
       className={cn('transition-colors hover:text-foreground', className)}
