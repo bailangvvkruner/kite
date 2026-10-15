@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { Page } from "@playwright/test";
 
-import { appendTo, bodyOf, expect, hold, test } from "./fixtures";
+import { appendTo, bodyOf, expect, hold, saveOnly, test } from "./fixtures";
 
 const savedAt = /^Saved at /;
 
@@ -48,7 +48,7 @@ test("text typed while a save is in flight stays unsaved until the next save", a
   expect(first).toContain("Written before the save. Sent with the first save.");
   expect(first).not.toContain("Typed while it was saving.");
 
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await saveOnly(page);
   await expect(page.getByText(savedAt)).toBeVisible();
   expect(await site.read(post.file)).toContain(whole);
 
@@ -87,7 +87,7 @@ test("a post changed on disk meanwhile merges with the edit made here", async ({
 
   await site.edit(post, (text) => text.replace("Alpha paragraph.", "Alpha paragraph, changed on disk."));
   await appendTo(page, "Charlie paragraph.", " Changed in the studio.");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await saveOnly(page);
 
   const conflict = page.getByRole("dialog", { name: "This changed while you were editing" });
   await expect(conflict.getByText("Different paragraphs")).toBeVisible();
@@ -97,7 +97,7 @@ test("a post changed on disk meanwhile merges with the edit made here", async ({
   await expect(bodyOf(page)).toContainText("Alpha paragraph, changed on disk.");
   await expect(bodyOf(page)).toContainText("Charlie paragraph. Changed in the studio.");
   await expect(page.getByText("Unsaved changes, kept in this browser")).toBeVisible();
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await saveOnly(page);
   await expect(page.getByText(savedAt)).toBeVisible();
 
   expect(await site.read(post.file)).toContain(
@@ -115,12 +115,12 @@ test.describe("with the index behind the disk", () => {
     await page.goto(`/admin/content/post/${post.id}`);
     await appendTo(page, "Charlie paragraph.", " Changed in the studio.");
     await site.write(post.file, (await site.read(post.file)).replace("Alpha paragraph.", "Alpha paragraph, changed on disk."));
-    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await saveOnly(page);
 
     const conflict = page.getByRole("dialog", { name: "This changed while you were editing" });
     await expect(conflict.getByText("Different paragraphs")).toBeVisible();
     await conflict.getByRole("button", { name: "Merge both" }).click();
-    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await saveOnly(page);
     await expect(page.getByText(savedAt)).toBeVisible();
     expect(await site.read(post.file)).toContain("Alpha paragraph, changed on disk.");
   });

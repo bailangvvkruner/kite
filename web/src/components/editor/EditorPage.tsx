@@ -49,6 +49,7 @@ import {
 import { Preview } from "@/components/editor/Preview";
 import { PublishMenu } from "@/components/editor/PublishMenu";
 import { RichEditor } from "@/components/editor/RichEditor";
+import { ShipButton } from "@/components/editor/ShipButton";
 import { renderedBlocks, useScrollSync } from "@/components/editor/scrollSync";
 import type { SlashItem } from "@/components/editor/SlashMenu";
 import { SourceEditor, type SourceHandle } from "@/components/editor/SourceEditor";
@@ -404,6 +405,16 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
   const troubled =
     item.status === "conflict" || (item.dirty && !saving && (!item.autosaves || item.restored !== null));
 
+  // What a publish of this item would carry: its bundle or file, as the
+  // server names it, among what git sees uncommitted.
+  const locator = item.base?.locator;
+  const uncommitted = Boolean(
+    locator && delivery.data?.dirty?.some((path) => path === locator || path.startsWith(`${locator}/`)),
+  );
+  const unpublished = !item.dirty && uncommitted;
+  const upToDate =
+    Boolean(id) && !item.dirty && !uncommitted && !delivery.data?.ahead && !publish.needsConfirmation;
+
   // A save from today reads as a time; an older one needs its date too.
   const stamp = (at: Date) =>
     at.toDateString() === new Date().toDateString()
@@ -459,6 +470,15 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
             </Link>
             {" · "}
             <span className={cn(troubled && "text-warning")}>{state}</span>
+            {unpublished && (
+              <>
+                {" · "}
+                <span className="inline-flex items-center gap-1">
+                  <span className="size-1.5 rounded-full bg-string" aria-hidden />
+                  {t("editor.unpublished")}
+                </span>
+              </>
+            )}
             {item.status === "conflict" && !resolving && (
               <>
                 {" · "}
@@ -492,25 +512,22 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
           </Button>
 
           {!writable ? null : canPublish(delivery.data) ? (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!item.dirty || busy}
-                onClick={() => void save()}
-              >
-                {saving && <Spinner />}
-                {t("editor.save")}
-              </Button>
-              <Button size="sm" disabled={busy} onClick={() => void ship()}>
-                {publish.pending && <Spinner />}
-                {publish.needsConfirmation
+            <ShipButton
+              label={
+                publish.needsConfirmation
                   ? t("publish.anyway")
                   : draft.status === "published"
-                    ? t("publish.update")
-                    : t("publish.action")}
-              </Button>
-            </>
+                    ? t("publish.changes")
+                    : t("publish.action")
+              }
+              shipping={publish.pending}
+              saving={saving}
+              canShip={!busy && !upToDate}
+              canSave={item.dirty && !busy}
+              upToDate={upToDate}
+              onShip={() => void ship()}
+              onSave={() => void save()}
+            />
           ) : (
             <Button size="sm" disabled={!item.dirty || busy} onClick={() => void save()}>
               {saving && <Spinner />}

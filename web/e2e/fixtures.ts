@@ -36,6 +36,12 @@ export async function appendTo(page: Page, paragraph: string, text: string) {
   await page.keyboard.type(text);
 }
 
+/** saveOnly saves the open item without publishing it, from the menu beside its publish button. */
+export async function saveOnly(page: Page) {
+  await page.getByRole("button", { name: "Save options" }).click();
+  await page.getByRole("menuitem", { name: /^Save without publishing/ }).click();
+}
+
 /**
  * hold lets the next request of a method to url reach the server but keeps
  * its answer from the page until release is called, as a slow connection
