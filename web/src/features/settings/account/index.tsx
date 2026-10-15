@@ -38,6 +38,7 @@ import { NewPassword, newPasswordReady } from "@/components/new-password";
 import { PasswordInput } from "@/components/password-input";
 import { QueryError } from "@/components/query-error";
 import { SignOutDialog } from "@/components/sign-out-dialog";
+import { FormActions } from "@/components/form-actions";
 import { ContentSection } from "../components/content-section";
 import { Group, Row } from "../components/form-group";
 
@@ -52,6 +53,7 @@ export function AccountSettings() {
   const account = useAccountInfo();
   const { hash } = useLocation();
   const loaded = Boolean(account.data);
+  const profile = useProfileForm(account.data);
 
   // The menu's "set a password" lands here; the group it means is below the
   // profile, so it is brought into view once there is something to show.
@@ -64,10 +66,25 @@ export function AccountSettings() {
       title={t("settings.account")}
       desc={t("settings.accountNote")}
       end={{ title: t("settings.endAccount"), note: t("settings.endAccountNote") }}
+      // The profile saves from the title row, as every settings page does;
+      // signing in has its own buttons, since a password is not a setting.
+      actions={
+        account.data && (
+          <FormActions
+            changes={profile.changes}
+            problems={profile.emailLeft && !profile.emailOK ? 1 : 0}
+            pending={profile.saving}
+            blocked={profile.locked && profile.nameLocked}
+            onRevert={profile.revert}
+            onSave={() => void profile.save()}
+            saveLabel={t("account.saveProfile")}
+          />
+        )
+      }
     >
       {account.data ? (
         <div>
-          <ProfileGroup account={account.data} />
+          <ProfileGroup account={account.data} form={profile} />
           {account.data.protected ? (
             <SignInGroup account={account.data} />
           ) : (
@@ -85,35 +102,39 @@ export function AccountSettings() {
   );
 }
 
-function ProfileGroup({ account }: { account: Account }) {
+type ProfileForm = ReturnType<typeof useProfileForm>;
+
+/**
+ * useProfileForm holds the name and email being edited, for the profile
+ * group to show and the title row to save.
+ */
+function useProfileForm(account: Account | undefined) {
   const { t } = useI18n();
   const update = useUpdateProfile();
   const settings = useSettings();
   const saveSettings = useSaveSettings();
-  const upload = useUploadAvatar();
-  const removeAvatar = useRemoveAvatar();
-  const picker = useRef<HTMLInputElement>(null);
 
   // The name is the site's author, so the site credits the person by it. A
   // name kept in the profile before is taken over from there.
   const author = settings.data?.site.author ?? "";
-  const stored = author || account.profile.name;
+  const storedEmail = account?.profile.email ?? "";
+  const stored = author || (account?.profile.name ?? "");
   const [name, setName] = useState(stored);
-  const [email, setEmail] = useState(account.profile.email);
+  const [email, setEmail] = useState(storedEmail);
   // What was stored is what the server trimmed, so the form follows it.
   useEffect(() => setName(stored), [stored]);
-  useEffect(() => setEmail(account.profile.email), [account.profile.email]);
+  useEffect(() => setEmail(storedEmail), [storedEmail]);
 
-  const locked = !account.profile_editable;
+  const locked = !account?.profile_editable;
   const nameLocked = !settings.data?.writable.includes("site.author");
-  const dirty = name.trim() !== stored || email.trim() !== account.profile.email;
+  const changes = Number(name.trim() !== stored) + Number(email.trim() !== storedEmail);
   const saving = update.isPending || saveSettings.isPending;
   // Judged once the field is left, not while the address is half typed.
   const [emailLeft, setEmailLeft] = useState(false);
   const emailOK = email.trim() === "" || looksLikeEmail(email.trim());
 
-  const save = async (e: FormEvent) => {
-    e.preventDefault();
+  const save = async () => {
+    if (!changes || !emailOK || saving) return;
     try {
       if (name.trim() !== author && settings.data) {
         await saveSettings.mutateAsync({
@@ -121,13 +142,48 @@ function ProfileGroup({ account }: { account: Account }) {
           revision: settings.data.revision,
         });
       }
-      if (email.trim() !== account.profile.email || account.profile.name) {
+      if (email.trim() !== storedEmail || account?.profile.name) {
         await update.mutateAsync({ name: "", email });
       }
       toast.success(t("account.profileSaved"));
     } catch {
       // Each save says what went wrong under the form.
     }
+  };
+  const revert = () => {
+    setName(stored);
+    setEmail(storedEmail);
+    setEmailLeft(false);
+  };
+
+  return {
+    name,
+    setName,
+    email,
+    setEmail,
+    emailLeft,
+    setEmailLeft,
+    emailOK,
+    locked,
+    nameLocked,
+    changes,
+    saving,
+    error: saveSettings.error ?? update.error,
+    save,
+    revert,
+  };
+}
+
+function ProfileGroup({ account, form }: { account: Account; form: ProfileForm }) {
+  const { t } = useI18n();
+  const upload = useUploadAvatar();
+  const removeAvatar = useRemoveAvatar();
+  const picker = useRef<HTMLInputElement>(null);
+  const { name, setName, email, setEmail, emailLeft, setEmailLeft, emailOK, locked, nameLocked } = form;
+
+  const save = (e: FormEvent) => {
+    e.preventDefault();
+    void form.save();
   };
 
   const choose = async (file: File | undefined) => {
@@ -143,7 +199,7 @@ function ProfileGroup({ account }: { account: Account }) {
   };
 
   return (
-    <Group id="account-profile" title={t("account.groupProfile")} changed={dirty}>
+    <Group id="account-profile" title={t("account.groupProfile")} changed={form.changes > 0}>
       <div className="flex items-center gap-4">
         <UserAvatar large />
         <div className="grid gap-2">
@@ -219,13 +275,9 @@ function ProfileGroup({ account }: { account: Account }) {
             onBlur={() => setEmailLeft(true)}
           />
         </Row>
-        <Problem error={saveSettings.error ?? update.error} />
-        <div>
-          <Button type="submit" disabled={(locked && nameLocked) || !dirty || !emailOK || saving}>
-            {saving && <Spinner />}
-            {t("account.saveProfile")}
-          </Button>
-        </div>
+        <Problem error={form.error} />
+        {/* Enter in either field saves; the button that shows is in the title row. */}
+        <button type="submit" tabIndex={-1} aria-hidden className="sr-only" />
       </form>
     </Group>
   );
