@@ -7,7 +7,6 @@ import {
   CpuIcon,
   DownloadSimpleIcon,
   GlobeIcon,
-  PaletteIcon,
   PuzzlePieceIcon,
   ShieldCheckIcon,
 } from "@phosphor-icons/react";
@@ -19,22 +18,40 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-/** Screenshot is a theme's picture of itself, or a plain panel without one. */
+/**
+ * Screenshot is a theme's picture of itself. Until it arrives the panel
+ * shimmers under the theme's name, and without one the name stays.
+ */
 export function AppScreenshot({ app, className }: { app: AppInfo; className?: string }) {
-  const [failed, setFailed] = useState(false);
+  return <Shot key={app.screenshot} src={app.screenshot} title={app.title} className={className} />;
+}
+
+function Shot({ src, title, className }: { src?: string; title: string; className?: string }) {
+  const [state, setState] = useState<"loading" | "ready" | "failed">(src ? "loading" : "failed");
   return (
     <div className={cn("relative overflow-hidden bg-muted", className)}>
-      {app.screenshot && !failed ? (
+      {src && state !== "failed" && (
         <img
-          src={app.screenshot}
+          src={src}
           alt=""
           loading="lazy"
-          className="size-full object-cover object-top"
-          onError={() => setFailed(true)}
+          // A cached picture can finish before React hears its load event.
+          ref={(img) => {
+            if (img?.complete && img.naturalWidth > 0) setState("ready");
+          }}
+          className={cn("size-full object-cover object-top transition-opacity duration-300", state !== "ready" && "opacity-0")}
+          onLoad={() => setState("ready")}
+          onError={() => setState("failed")}
         />
-      ) : (
-        <div className="flex size-full items-center justify-center text-muted-foreground">
-          <PaletteIcon className="size-6" />
+      )}
+      {state !== "ready" && (
+        <div
+          className={cn(
+            "absolute inset-0 flex items-center justify-center px-4 text-center font-serif text-xl font-bold text-muted-foreground/70",
+            state === "loading" && "kite-shimmer",
+          )}
+        >
+          <span className="line-clamp-2">{title}</span>
         </div>
       )}
     </div>

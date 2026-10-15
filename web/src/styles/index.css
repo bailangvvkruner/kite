@@ -235,3 +235,25 @@
     animation-duration: 0.01s;
   }
 }
+
+/* A picture still on its way: a band of light drifts across its panel. */
+.kite-shimmer {
+  background: linear-gradient(
+      100deg,
+      transparent 30%,
+      color-mix(in oklab, var(--primary) 9%, transparent) 50%,
+      transparent 70%
+    )
+    0 0 / 200% 100%;
+  animation: kite-shimmer 1.4s linear infinite;
+}
+@keyframes kite-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kite-shimmer {
+    animation: none;
+  }
+}
