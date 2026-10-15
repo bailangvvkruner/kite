@@ -25,7 +25,7 @@ import { canPublish, useDelivery, usePublish } from "@/hooks/usePublish";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { useWordCount } from "@/hooks/useWordCount";
 import { destination, siteHome } from "@/lib/links";
-import { isoDate } from "@/lib/dates";
+import { useDates } from "@/lib/dates";
 import { composing } from "@/lib/ime";
 import { stored } from "@/lib/uploads";
 import { cn } from "@/lib/utils";
@@ -75,6 +75,7 @@ import "@/components/editor/editor.scss";
 
 export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
   const { t, locale } = useI18n();
+  const dates = useDates();
   const problem = useProblem();
   const navigate = useNavigate();
   const kindLabel = useKindLabel();
@@ -407,7 +408,7 @@ export function EditorPage({ id, kind }: { id: string | null; kind: string }) {
   const stamp = (at: Date) =>
     at.toDateString() === new Date().toDateString()
       ? clock.format(at)
-      : `${isoDate(at.toISOString())} ${clock.format(at)}`;
+      : `${dates.day(at)} ${clock.format(at)}`;
   const saved = item.savedAt ?? (item.base?.updated_at ? new Date(item.base.updated_at) : null);
   const lastSaved = saved ? t("editor.lastSaved", { time: stamp(saved) }) : "";
 

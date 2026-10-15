@@ -87,11 +87,13 @@ export function ContentsTable({
 }: Props) {
   const { t } = useI18n();
   const taxonomyLabel = useTaxonomyLabel();
-  // The terms show under each title, so their own columns start folded away;
-  // the view menu brings them back.
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
-    Object.fromEntries(taxonomies.map((taxonomy) => [taxonomy, false])),
-  );
+  // The terms show under each title, and the update time mostly repeats the
+  // publish time, which hints at it; so their columns start folded away
+  // unless the list is sorted by one. The view menu brings them back.
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => ({
+    ...Object.fromEntries(taxonomies.map((taxonomy) => [taxonomy, false])),
+    updated_at: sort.replace(/^-/, "") === "updated_at",
+  }));
 
   // What is typed is shown at once and asked of the server once typing stops,
   // so a slow answer for an old prefix cannot replace a fresh one.

@@ -4,9 +4,11 @@ import { CaretRightIcon } from "@phosphor-icons/react";
 import { useI18n } from "@/i18n";
 import { useLatest, useMonthlyCounts, useStatusCounts, useTerms } from "@/hooks/useContents";
 import { useKindLabel, useTaxonomyLabel } from "@/hooks/useKindLabel";
+import { useDates } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QueryError } from "@/components/query-error";
+import { TermCount, termChip } from "@/components/term-chip";
 
 /** Panel is a dashboard card: a title, a quiet note or link beside it, then its body. */
 function Panel({
@@ -33,12 +35,12 @@ function Panel({
 
 /** LatestPosts is what went out last, newest first, each one a way back in. */
 export function LatestPosts({ kind }: { kind: string }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const kindLabel = useKindLabel();
+  const dates = useDates();
   const latest = useLatest(kind, 6, "-published_at");
   const total = useStatusCounts(kind, ["all"]).all;
   const items = latest.data?.items ?? [];
-  const day = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" });
 
   return (
     <Panel
@@ -80,8 +82,11 @@ export function LatestPosts({ kind }: { kind: string }) {
                 <span className="hidden max-w-[40%] truncate text-xs text-muted-foreground sm:block">
                   {(item.taxonomies?.tags ?? []).map((tag) => `#${tag}`).join(" ")}
                 </span>
-                <span className="w-16 shrink-0 text-end text-xs text-muted-foreground tabular-nums">
-                  {item.published_at ? day.format(new Date(item.published_at)) : ""}
+                <span
+                  title={dates.full(item.published_at)}
+                  className="w-24 shrink-0 text-end text-xs text-muted-foreground tabular-nums"
+                >
+                  {item.published_at ? dates.day(item.published_at) : ""}
                 </span>
               </Link>
             </li>
@@ -175,10 +180,10 @@ function TopTerms({ kind, taxonomy }: { kind: string; taxonomy: string }) {
             to="/content/$kind"
             params={{ kind }}
             search={{ terms: [`${taxonomy}:${item.term}`] }}
-            className="inline-flex h-6 items-center gap-1 rounded-md bg-muted px-2 text-xs hover:bg-accent hover:text-foreground"
+            className={termChip(true)}
           >
             {item.term}
-            <span className="text-muted-foreground tabular-nums">{item.count}</span>
+            <TermCount count={item.count} small />
           </Link>
         ))}
       </div>

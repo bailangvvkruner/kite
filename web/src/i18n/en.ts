@@ -203,6 +203,8 @@ export const en = {
   "list.allStatuses": "All",
   "list.publishedAt": "Published",
   "list.updatedAt": "Updated",
+  "list.publishedOn": "Published {time}",
+  "list.updatedOn": "Updated {time}",
   "list.clearFilter": "Clear this filter",
   "list.empty": "Nothing matches these filters",
   "list.emptyKind": "No {kind} yet",

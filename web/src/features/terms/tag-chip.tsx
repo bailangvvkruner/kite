@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TermCount, termChip } from "@/components/term-chip";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { TermMode } from "./term-dialog";
 import { ItemRow, useTermItems, type TermProps } from "./term-parts";
@@ -37,12 +38,13 @@ export function TagChip(props: TermProps) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-8 items-center gap-2 rounded-[9px] border border-input border-b-input-edge bg-card ps-3 pe-[5px] text-[13.5px] shadow-xs transition-[border-color,box-shadow] outline-none hover:border-input-edge focus-visible:ring-[3px] focus-visible:ring-field-ring data-[state=open]:border-primary data-[state=open]:ring-[3px] data-[state=open]:ring-field-ring"
+          className={cn(
+            termChip(),
+            "data-[state=open]:border-primary data-[state=open]:ring-[3px] data-[state=open]:ring-field-ring",
+          )}
         >
           {term.term}
-          <span className="grid h-[22px] min-w-[22px] place-items-center rounded-md bg-muted px-1.5 text-[11.5px] text-muted-foreground tabular-nums">
-            {term.count}
-          </span>
+          <TermCount count={term.count} />
         </button>
       </PopoverTrigger>
       <PopoverContent

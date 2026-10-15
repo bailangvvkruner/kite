@@ -6,7 +6,7 @@ import { PushPinIcon } from "@phosphor-icons/react";
 import type { Summary } from "@/api/client";
 import { useI18n } from "@/i18n";
 import { useTaxonomyLabel } from "@/hooks/useKindLabel";
-import { isoDate } from "@/lib/dates";
+import { useDates } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,6 +40,7 @@ export function useContentsColumns({
 }: Options): ColumnDef<Summary>[] {
   const { t } = useI18n();
   const taxonomyLabel = useTaxonomyLabel();
+  const dates = useDates();
 
   return useMemo<ColumnDef<Summary>[]>(
     () => {
@@ -178,11 +179,12 @@ export function useContentsColumns({
             ),
             cell: ({ row }) => {
               const item = row.original;
+              // An item that records no time shows when its file last changed.
+              const updated = item.updated_at ?? item.modified_at;
               if (field === "updated_at") {
-                // An item that records no time shows when its file last changed.
                 return (
-                  <span className="text-muted-foreground tabular-nums">
-                    {isoDate(item.updated_at ?? item.modified_at)}
+                  <span title={dates.full(updated)} className="text-muted-foreground tabular-nums">
+                    {dates.day(updated)}
                   </span>
                 );
               }
@@ -190,8 +192,17 @@ export function useContentsColumns({
               if (!item.published_at && item.status === "published") {
                 return <span className="text-muted-foreground">{t("list.noDate")}</span>;
               }
+              // The update time is folded away by default, so its hint is here.
+              const hint = [
+                item.published_at && t("list.publishedOn", { time: dates.full(item.published_at) }),
+                updated && t("list.updatedOn", { time: dates.full(updated) }),
+              ]
+                .filter(Boolean)
+                .join("\n");
               return (
-                <span className="text-muted-foreground tabular-nums">{isoDate(item.published_at)}</span>
+                <span title={hint} className="text-muted-foreground tabular-nums">
+                  {dates.day(item.published_at)}
+                </span>
               );
             },
             enableSorting: sortable.includes(field),
@@ -219,6 +230,6 @@ export function useContentsColumns({
       ];
       return writable ? columns : columns.filter((column) => column.id !== "select");
     },
-    [t, taxonomyLabel, sortable, taxonomies, trashed, writable, chosenTerms, onTerm, onDelete, onRestore],
+    [t, dates, taxonomyLabel, sortable, taxonomies, trashed, writable, chosenTerms, onTerm, onDelete, onRestore],
   );
 }

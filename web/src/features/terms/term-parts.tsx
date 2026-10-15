@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 
 import type { components } from "@/api/client";
-import { useI18n } from "@/i18n";
+import { useDates } from "@/lib/dates";
 import { useTerm } from "@/hooks/useTerm";
 import { StatusPill } from "@/components/StatusLabel";
 import type { TermMode } from "./term-dialog";
@@ -42,23 +42,9 @@ export function useTermItems(taxonomy: string, term: string) {
   return { items, pending: detail.isPending, error: detail.error };
 }
 
-/** useShortDate gives a day without its year, unless it is not this year's. */
-export function useShortDate() {
-  const { locale } = useI18n();
-  return useMemo(() => {
-    const day = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" });
-    const full = new Intl.DateTimeFormat(locale, { year: "numeric", month: "short", day: "numeric" });
-    const year = new Date().getFullYear();
-    return (iso: string) => {
-      const date = new Date(iso);
-      return (date.getFullYear() === year ? day : full).format(date);
-    };
-  }, [locale]);
-}
-
 /** ItemRow is one item under a term, opening it in the editor. */
 export function ItemRow({ item, className }: { item: Item; className?: string }) {
-  const short = useShortDate();
+  const dates = useDates();
   const date = itemDate(item);
   return (
     <li className={className}>
@@ -71,8 +57,8 @@ export function ItemRow({ item, className }: { item: Item; className?: string })
         {item.status !== "published" && (
           <StatusPill status={item.status} className="h-5 shrink-0 px-1.5 text-[11px]" />
         )}
-        <span className="ms-auto shrink-0 ps-2 text-xs text-muted-foreground tabular-nums">
-          {date ? short(date) : ""}
+        <span title={dates.full(date)} className="ms-auto shrink-0 ps-2 text-xs text-muted-foreground tabular-nums">
+          {date ? dates.day(date) : ""}
         </span>
       </Link>
     </li>

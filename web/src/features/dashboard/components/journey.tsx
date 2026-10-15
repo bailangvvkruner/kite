@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
+  ArrowRightIcon,
+  ArrowUpRightIcon,
   CalendarDotsIcon,
   PencilSimpleLineIcon,
   CloudArrowUpIcon,
@@ -86,11 +88,10 @@ export function Journey({ kind }: { kind: string }) {
           note={latestDraft ? latestDraft.title || latestDraft.slug : t("dashboard.noDrafts")}
           action={
             latestDraft && (
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/content/$kind/$id" params={{ kind, id: latestDraft.id }}>
-                  {t("dashboard.continue")}
-                </Link>
-              </Button>
+              <Link to="/content/$kind/$id" params={{ kind, id: latestDraft.id }} className={go}>
+                {t("dashboard.continue")}
+                <ArrowRightIcon />
+              </Link>
             )
           }
         />
@@ -106,11 +107,10 @@ export function Journey({ kind }: { kind: string }) {
           }
           action={
             nextUp && (
-              <Button variant="ghost" size="sm" className="-ms-2.5" asChild>
-                <Link to="/content/$kind" params={{ kind }} search={{ status: ["scheduled"] }}>
-                  {t("dashboard.viewAll")}
-                </Link>
-              </Button>
+              <Link to="/content/$kind" params={{ kind }} search={{ status: ["scheduled"] }} className={go}>
+                {t("dashboard.viewAll")}
+                <ArrowRightIcon />
+              </Link>
             )
           }
         />
@@ -134,9 +134,10 @@ export function Journey({ kind }: { kind: string }) {
           }
           action={
             !git ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/deploy">{t("nav.deploy")}</Link>
-              </Button>
+              <Link to="/deploy" className={go}>
+                {t("nav.deploy")}
+                <ArrowRightIcon />
+              </Link>
             ) : dirty.length && writable ? (
               <Button size="sm" onClick={() => setPublishing(true)}>
                 {t("publish.publishAll", { count: dirty.length })}
@@ -147,9 +148,10 @@ export function Journey({ kind }: { kind: string }) {
                 {t("publish.pushCommits", { count: ahead })}
               </Button>
             ) : failed ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/deploy">{t("publish.view")}</Link>
-              </Button>
+              <Link to="/deploy" className={go}>
+                {t("publish.view")}
+                <ArrowRightIcon />
+              </Link>
             ) : null
           }
         />
@@ -163,11 +165,10 @@ export function Journey({ kind }: { kind: string }) {
               : t("dashboard.latestEmpty", { kind: many })
           }
           action={
-            <Button variant="ghost" size="sm" className="-ms-2.5" asChild>
-              <a href={siteHome(site.data)} target="_blank" rel="noreferrer">
-                {t("nav.viewSite")}
-              </a>
-            </Button>
+            <a href={siteHome(site.data)} target="_blank" rel="noreferrer" className={go}>
+              {t("nav.viewSite")}
+              <ArrowUpRightIcon />
+            </a>
           }
         />
       </div>
@@ -266,3 +267,8 @@ function names(paths: string[], locale: string): string {
   const list = new Intl.ListFormat(locale, { type: "conjunction" }).format(shown);
   return paths.length > shown.length ? `${list} +${paths.length - shown.length}` : list;
 }
+
+// A stop's way onward reads as a link, as the category cards' do; only a
+// change, such as publishing, is a button.
+const go =
+  "inline-flex h-8 items-center gap-1 text-[13px] font-medium text-primary outline-none hover:underline focus-visible:underline [&_svg]:size-3.5";
