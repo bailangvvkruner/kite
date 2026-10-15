@@ -51,8 +51,8 @@ export function NavUser() {
                 ) : (
                   <Skeleton className='h-4 w-20' />
                 )}
-                {account.email && (
-                  <span className='truncate text-xs text-muted-foreground'>{account.email}</span>
+                {account.detail && (
+                  <span className='truncate text-xs text-muted-foreground'>{account.detail}</span>
                 )}
               </div>
             </Link>
