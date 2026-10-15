@@ -9,8 +9,8 @@ import { useSettingsDraft } from "@/hooks/useSettingsDraft";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { FormActions } from "@/components/form-actions";
 
 /**
  * useSettingsForm is one settings form: a draft of what is stored, saved as
@@ -21,6 +21,8 @@ export function useSettingsForm(
   read: (settings: Settings) => Record<string, unknown> | undefined,
   /** path is the dotted configuration path a value of the form is saved to. */
   path: (key: string) => string,
+  /** check names what is wrong with a value, by its key, before it is sent. */
+  check?: (values: Record<string, unknown>) => Record<string, string | null>,
 ) {
   const { t } = useI18n();
   const problem = useProblem();
@@ -33,11 +35,13 @@ export function useSettingsForm(
   const guard = useUnsavedGuard(form.dirty);
 
   // Only what changed is sent, so a file is not rewritten for untouched values.
-  const changes = Object.fromEntries(
-    Object.entries(values)
-      .filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(form.baseline?.[key]))
-      .map(([key, value]) => [path(key), value]),
+  const changed = Object.keys(values).filter(
+    (key) => JSON.stringify(values[key]) !== JSON.stringify(form.baseline?.[key]),
   );
+  const changes = Object.fromEntries(changed.map((key) => [path(key), values[key]]));
+  const problems = Object.fromEntries(
+    Object.entries(form.values && check ? check(values) : {}).filter(([, problem]) => problem),
+  ) as Record<string, string>;
   const conflict = save.error instanceof ApiError && save.error.code === "conflict";
   const failure = settings.error ?? save.error;
   const said = failure
@@ -51,6 +55,12 @@ export function useSettingsForm(
     values,
     loaded: incoming !== undefined,
     dirty: form.dirty,
+    changed,
+    /** touched says whether any of the keys holds an unsaved change. */
+    touched: (...keys: string[]) => keys.some((key) => changed.includes(key)),
+    problems,
+    /** troubled says whether any of the keys holds a value that cannot be saved. */
+    troubled: (...keys: string[]) => keys.some((key) => key in problems),
     conflict,
     // Nothing was read to show; a reload is the way on, as after a conflict.
     unread: Boolean(settings.error) && !settings.data,
@@ -59,6 +69,7 @@ export function useSettingsForm(
     guard,
     change: form.change,
     submit: () =>
+      Object.keys(problems).length === 0 &&
       save.mutate(
         { changes, revision: form.revision ?? "" },
         {
@@ -68,6 +79,9 @@ export function useSettingsForm(
           },
         },
       ),
+    revert: () => {
+      if (form.baseline && form.revision) form.reset(form.baseline, form.revision);
+    },
     reload: async () => {
       const result = await settings.refetch();
       if (result.data) {
@@ -106,14 +120,18 @@ export function FormProblem({ form }: { form: Form }) {
   );
 }
 
-/** SaveButton saves the form once there is something to save. */
-export function SaveButton({ form }: { form: Form }) {
-  const { t } = useI18n();
+/** SettingsActions save a settings form from beside its title. */
+export function SettingsActions({ form }: { form: Form }) {
+  if (!form.loaded) return null;
   return (
-    <Button disabled={!form.dirty || form.pending || form.conflict} onClick={form.submit}>
-      {form.pending && <Spinner />}
-      {t("settings.save")}
-    </Button>
+    <FormActions
+      changes={form.changed.length}
+      problems={Object.keys(form.problems).length}
+      pending={form.pending}
+      blocked={form.conflict}
+      onRevert={form.revert}
+      onSave={form.submit}
+    />
   );
 }
 

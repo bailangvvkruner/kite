@@ -11,14 +11,13 @@ import { usePlugin, useSavePlugins, useSwitchPlugin } from "@/hooks/usePlugins";
 import { useSettingsDraft } from "@/hooks/useSettingsDraft";
 import { uploadSiteMedia } from "@/hooks/useThemes";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
-import { changesOf, defaultOf, problemOf, valueFields } from "@/lib/schema";
+import { changesOf, defaultOf, problemOf, sameValue, valueFields } from "@/lib/schema";
 import { stored } from "@/lib/uploads";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { FormActions } from "@/components/form-actions";
 import { ReadOnlyNote } from "@/components/read-only-note";
 import { AppHeader } from "@/components/layout/app-header";
 import { Main } from "@/components/layout/main";
@@ -46,6 +45,9 @@ export function PluginSettings({ id }: { id: string }) {
 
   const fields = useMemo(() => valueFields(detail?.schema), [detail?.schema]);
   const problems = values ? fields.filter((field) => problemOf(field, values[field.key], t)).length : 0;
+  const changes = values
+    ? fields.filter((field) => !sameValue(values[field.key], form.baseline?.[field.key])).length
+    : 0;
 
   const submit = () => {
     if (!detail || !values) return;
@@ -113,6 +115,18 @@ export function PluginSettings({ id }: { id: string }) {
                   }
                 />
               </label>
+              {writable && values && fields.length > 0 && (
+                <>
+                  <span aria-hidden className="mx-1 h-6 w-px self-center bg-border" />
+                  <FormActions
+                    changes={changes}
+                    problems={problems}
+                    pending={save.isPending}
+                    onRevert={() => form.baseline && form.revision && form.reset(form.baseline, form.revision)}
+                    onSave={submit}
+                  />
+                </>
+              )}
             </PageTitle>
             <ReadOnlyNote className="max-w-2xl" />
             <PublishBar className="mb-0 lg:mb-0" />
@@ -159,17 +173,6 @@ export function PluginSettings({ id }: { id: string }) {
                     }}
                     idPrefix="plugin-"
                   />
-                  {writable && (
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Button onClick={submit} disabled={!form.dirty || problems > 0 || save.isPending}>
-                        {save.isPending && <Spinner />}
-                        {t("settings.save")}
-                      </Button>
-                      {problems > 0 && (
-                        <span className="text-sm text-destructive">{t("customize.problems", { count: problems })}</span>
-                      )}
-                    </div>
-                  )}
                 </fieldset>
               )}
             </div>

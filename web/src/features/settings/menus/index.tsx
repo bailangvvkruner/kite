@@ -5,6 +5,7 @@ import { FilePlusIcon } from "@phosphor-icons/react";
 import { api, unwrap, type Field, type Settings } from "@/api/client";
 import { useI18n } from "@/i18n";
 import { useSite, useWritable } from "@/hooks/useContents";
+import { useSettings } from "@/hooks/useSettings";
 import { siteHome } from "@/lib/links";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -13,7 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RepeatField } from "@/components/RepeatField";
 import { ContentSection } from "../components/content-section";
 import { Group } from "../components/form-group";
-import { FormProblem, LeaveGuard, SaveButton, useSettingsForm } from "../use-settings-form";
+import { problemOf } from "@/lib/schema";
+import { FormProblem, LeaveGuard, SettingsActions, useSettingsForm } from "../use-settings-form";
 
 type Link = { name?: string; url?: string; children?: Link[] };
 
@@ -26,22 +28,42 @@ const read = (settings: Settings) => {
 
 export function MenuSettings() {
   const { t } = useI18n();
-  const form = useSettingsForm(read, (key) => `menus.${key}`);
   const writable = useWritable();
+  const drawn = useSettings().data?.theme.menus ?? [];
+  // A menu is drawn to the depth its theme says or its links reach, and is
+  // checked with the fields it is edited with at that depth.
+  const depthOfMenu = (name: string, links: Link[]) =>
+    Math.max(drawn.find((menu) => menu.name === name)?.depth ?? 1, depthOf(links));
+  const form = useSettingsForm(
+    read,
+    (key) => `menus.${key}`,
+    (values) =>
+      Object.fromEntries(
+        Object.entries(values).map(([name, value]) => {
+          const links = (value as Link[] | undefined) ?? [];
+          const field: Field = { key: name, type: "repeat", fields: linkFields(t, depthOfMenu(name, links)) };
+          return [name, problemOf(field, links, t)];
+        }),
+      ),
+  );
   const values = form.values as Record<string, Link[] | undefined>;
   const set = (name: string, links: unknown) => form.change({ ...values, [name]: links });
-
-  const drawn = form.settings?.theme.menus ?? [];
   const kept = Object.keys(values).filter((name) => !drawn.some((menu) => menu.name === name));
 
   return (
-    <ContentSection title={t("menus.title")} desc={t("menus.note")} writes>
+    <ContentSection
+      title={t("menus.title")}
+      desc={t("menus.note")}
+      writes
+      actions={writable && (drawn.length > 0 || kept.length > 0) && <SettingsActions form={form} />}
+      end={{ title: t("settings.endConfig"), note: t("settings.endConfigNote") }}
+    >
       <div>
         <FormProblem form={form} />
         {!form.loaded ? (
           <Skeleton className="h-72 w-full" />
         ) : (
-          <fieldset disabled={!writable} className="grid gap-5">
+          <fieldset disabled={!writable}>
             {drawn.length === 0 && (
               <div className="rounded-lg border border-dashed px-4 py-6 text-center">
                 <p className="text-sm font-medium">{t("menus.none")}</p>
@@ -56,9 +78,11 @@ export function MenuSettings() {
                 note={menu.description}
                 // Links written deeper than the theme draws are still shown,
                 // so that none is hidden from the one editing them.
-                depth={Math.max(menu.depth, depthOf(values[menu.name] ?? []))}
+                depth={depthOfMenu(menu.name, values[menu.name] ?? [])}
                 links={values[menu.name] ?? []}
                 onChange={(links) => set(menu.name, links)}
+                changed={form.touched(menu.name)}
+                problem={form.troubled(menu.name)}
               />
             ))}
             {kept.map((name) => (
@@ -67,16 +91,13 @@ export function MenuSettings() {
                 name={name}
                 title={name}
                 note={t("menus.unusedNote")}
-                depth={depthOf(values[name] ?? [])}
+                depth={depthOfMenu(name, values[name] ?? [])}
                 links={values[name] ?? []}
                 onChange={(links) => set(name, links)}
+                changed={form.touched(name)}
+                problem={form.troubled(name)}
               />
             ))}
-            {(drawn.length > 0 || kept.length > 0) && (
-              <div>
-                <SaveButton form={form} />
-              </div>
-            )}
           </fieldset>
         )}
         <LeaveGuard form={form} />
@@ -92,6 +113,8 @@ function Menu({
   depth,
   links,
   onChange,
+  changed,
+  problem,
 }: {
   name: string;
   title: string;
@@ -99,11 +122,13 @@ function Menu({
   depth: number;
   links: Link[];
   onChange: (links: unknown) => void;
+  changed?: boolean;
+  problem?: boolean;
 }) {
   const { t } = useI18n();
   const field: Field = { key: name, type: "repeat", label: title, fields: linkFields(t, depth) };
   return (
-    <Group id={`menu-${name}`} title={title} note={note}>
+    <Group id={`menu-${name}`} title={title} note={note} changed={changed} problem={problem}>
       <div className="grid gap-2">
         <RepeatField id={`menu-${name}-links`} field={field} value={links} onChange={onChange} />
         <PickContent onPick={(link) => onChange([...links, link])} />

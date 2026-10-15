@@ -3,10 +3,10 @@ import { toast } from "sonner";
 
 import { locales, useI18n, type Locale } from "@/i18n";
 import { useTheme, type Theme } from "@/lib/theme";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormActions } from "@/components/form-actions";
 import { ContentSection } from "../components/content-section";
 import { Group } from "../components/form-group";
 
@@ -64,21 +64,44 @@ export function AppearanceSettings() {
   // The header's toggle can change the theme under an open form.
   useEffect(() => setChosenTheme(theme), [theme]);
   useEffect(() => setChosenLocale(locale), [locale]);
-  const dirty = chosenLocale !== locale || chosenTheme !== theme;
+  const changes = Number(chosenLocale !== locale) + Number(chosenTheme !== theme);
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
+  const save = () => {
     if (chosenTheme !== theme) setTheme(chosenTheme);
     if (chosenLocale !== locale) setLocale(chosenLocale);
     toast.success(t("settings.appearanceSaved"));
   };
 
   return (
-    <ContentSection title={t("settings.interface")} desc={t("settings.interfaceNote")}>
-      <form onSubmit={submit} className="grid gap-5">
-        <Group title={t("nav.language")} note={t("settings.languageNote")}>
+    <ContentSection
+      title={t("settings.interface")}
+      desc={t("settings.interfaceNote")}
+      actions={
+        <FormActions
+          changes={changes}
+          onRevert={() => {
+            setChosenLocale(locale);
+            setChosenTheme(theme);
+          }}
+          onSave={save}
+        />
+      }
+      end={{ title: t("settings.endBrowser"), note: t("settings.endBrowserNote") }}
+    >
+      <form
+        onSubmit={(event: FormEvent) => {
+          event.preventDefault();
+          if (changes > 0) save();
+        }}
+      >
+        <Group
+          id="interface-language"
+          title={t("nav.language")}
+          note={t("settings.languageNote")}
+          changed={chosenLocale !== locale}
+        >
           <Select value={chosenLocale} onValueChange={(value) => setChosenLocale(value as Locale)}>
-            <SelectTrigger id="locale" aria-label={t("nav.language")} className="w-56">
+            <SelectTrigger id="locale" aria-label={t("nav.language")} className="w-full @xl/form:w-72">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -91,7 +114,12 @@ export function AppearanceSettings() {
           </Select>
         </Group>
 
-        <Group title={t("settings.appearance")} note={t("settings.appearanceNote")}>
+        <Group
+          id="interface-appearance"
+          title={t("settings.appearance")}
+          note={t("settings.appearanceNote")}
+          changed={chosenTheme !== theme}
+        >
           <RadioGroup
             value={chosenTheme}
             onValueChange={(value) => setChosenTheme(value as Theme)}
@@ -111,12 +139,6 @@ export function AppearanceSettings() {
             ))}
           </RadioGroup>
         </Group>
-
-        <div>
-          <Button type="submit" disabled={!dirty}>
-            {t("settings.saveAppearance")}
-          </Button>
-        </div>
       </form>
     </ContentSection>
   );

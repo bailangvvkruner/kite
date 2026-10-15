@@ -52,7 +52,7 @@ export function NewPassword({
 
   return (
     <>
-      <div className="grid gap-2">
+      <div data-half className="grid content-start gap-2">
         <Label htmlFor="new-password">{t(label)}</Label>
         <PasswordInput
           id="new-password"
@@ -69,7 +69,7 @@ export function NewPassword({
           <Hint>{help ? t(help, { n: minimum }) : t("setup.passwordHelp", { n: minimum })}</Hint>
         )}
       </div>
-      <div className="grid gap-2">
+      <div data-half className="grid content-start gap-2">
         <Label htmlFor="new-password-again">{t("setup.again")}</Label>
         <PasswordInput
           id="new-password-again"
@@ -101,7 +101,7 @@ export function Hint({ tone, children }: { tone?: "right" | "wrong"; children: R
     <p
       aria-live="polite"
       className={cn(
-        "text-sm text-muted-foreground",
+        "text-[13px] leading-relaxed text-muted-foreground",
         tone === "wrong" && "text-destructive",
         tone === "right" && "text-success",
       )}

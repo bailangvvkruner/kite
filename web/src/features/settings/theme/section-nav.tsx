@@ -5,6 +5,7 @@ import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { KiteRoute } from "@/components/kite-route";
 
 /** What a section holds that the list marks beside its name. */
 export interface Flags {
@@ -89,41 +90,21 @@ export function SectionNav({ sections, current, flags, query, matches, onQuery, 
             </ul>
           )
         ) : (
-          <ul className="grid gap-0.5">
-            {sections.map((section) => {
-              const flag = flags[section.key];
-              const on = section.key === current;
-              return (
-                <li key={section.key}>
-                  <button
-                    type="button"
-                    aria-current={on ? "page" : undefined}
-                    onClick={() => onChoose(section.key)}
-                    className={cn(
-                      "flex h-8 w-full items-center justify-between gap-2 rounded-md px-2 text-start text-sm hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
-                      on && "bg-muted font-medium",
-                    )}
-                  >
-                    <span className="truncate">{section.label || section.key}</span>
-                    {flag?.problem ? (
-                      <Dot className="bg-destructive" label={t("customize.sectionProblem")} />
-                    ) : flag?.dirty ? (
-                      <Dot className="bg-warning" label={t("customize.unsaved")} />
-                    ) : null}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <KiteRoute
+            label={t("customize.sections")}
+            stops={sections.map((section) => ({
+              key: section.key,
+              title: section.label || section.key,
+              changed: flags[section.key]?.dirty,
+              problem: flags[section.key]?.problem,
+            }))}
+            current={sections.findIndex((section) => section.key === current)}
+            onChoose={(i) => onChoose(sections[i].key)}
+            className="px-1 pt-1"
+          />
         )}
       </div>
     </nav>
-  );
-}
-
-function Dot({ className, label }: { className: string; label: string }) {
-  return (
-    <span role="img" aria-label={label} title={label} className={cn("size-1.5 shrink-0 rounded-full", className)} />
   );
 }
 

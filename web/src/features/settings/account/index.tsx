@@ -34,7 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { UserAvatar } from "@/components/layout/account";
-import { Hint, NewPassword, newPasswordReady } from "@/components/new-password";
+import { NewPassword, newPasswordReady } from "@/components/new-password";
 import { PasswordInput } from "@/components/password-input";
 import { QueryError } from "@/components/query-error";
 import { SignOutDialog } from "@/components/sign-out-dialog";
@@ -60,9 +60,13 @@ export function AccountSettings() {
   }, [loaded, hash]);
 
   return (
-    <ContentSection title={t("settings.account")} desc={t("settings.accountNote")}>
+    <ContentSection
+      title={t("settings.account")}
+      desc={t("settings.accountNote")}
+      end={{ title: t("settings.endAccount"), note: t("settings.endAccountNote") }}
+    >
       {account.data ? (
-        <div className="grid gap-5">
+        <div>
           <ProfileGroup account={account.data} />
           {account.data.protected ? (
             <SignInGroup account={account.data} />
@@ -139,7 +143,7 @@ function ProfileGroup({ account }: { account: Account }) {
   };
 
   return (
-    <Group title={t("account.groupProfile")}>
+    <Group id="account-profile" title={t("account.groupProfile")} changed={dirty}>
       <div className="flex items-center gap-4">
         <UserAvatar large />
         <div className="grid gap-2">
@@ -185,8 +189,8 @@ function ProfileGroup({ account }: { account: Account }) {
 
       {/* The server says what is wrong with an address, in the page rather
           than in the browser's own bubble. */}
-      <form onSubmit={save} noValidate className="grid gap-6">
-        <Row id="profile-name" label="account.name" help="account.nameHelp">
+      <form onSubmit={save} noValidate className={formGrid}>
+        <Row id="profile-name" label="account.name" help="account.nameHelp" half>
           <Input
             id="profile-name"
             value={name}
@@ -196,8 +200,14 @@ function ProfileGroup({ account }: { account: Account }) {
             onChange={(e) => setName(e.target.value)}
           />
         </Row>
-        <div className="grid gap-2">
-          <Label htmlFor="profile-email">{t("account.email")}</Label>
+        <Row
+          id="profile-email"
+          label="account.email"
+          help="account.emailHelp"
+          half
+          optional
+          problem={emailLeft && !emailOK ? t("account.emailInvalid") : null}
+        >
           <Input
             id="profile-email"
             type="email"
@@ -208,12 +218,7 @@ function ProfileGroup({ account }: { account: Account }) {
             onChange={(e) => setEmail(e.target.value)}
             onBlur={() => setEmailLeft(true)}
           />
-          {emailLeft && !emailOK ? (
-            <Hint tone="wrong">{t("account.emailInvalid")}</Hint>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("account.emailHelp")}</p>
-          )}
-        </div>
+        </Row>
         <Problem error={saveSettings.error ?? update.error} />
         <div>
           <Button type="submit" disabled={(locked && nameLocked) || !dirty || !emailOK || saving}>
@@ -245,10 +250,10 @@ function SetPasswordGroup({ account }: { account: Account }) {
   };
 
   return (
-    <Group id="sign-in" title={t("account.groupSignIn")}>
+    <Group id="sign-in" title={t("account.groupSignIn")} changed={password !== ""}>
       <Note icon={<ShieldWarningIcon />}>{t("account.openNote")}</Note>
       {account.editable ? (
-        <form onSubmit={submit} className="grid gap-6">
+        <form onSubmit={submit} className={formGrid}>
           <Row id="user" label="account.user" help="account.userHelp">
             <Input
               id="user"
@@ -331,8 +336,8 @@ function SignInGroup({ account }: { account: Account }) {
   };
 
   return (
-    <Group id="sign-in" title={t("account.groupSignIn")}>
-      <form onSubmit={submit} className="grid gap-6">
+    <Group id="sign-in" title={t("account.groupSignIn")} changed={renamed || password !== ""}>
+      <form onSubmit={submit} className={formGrid}>
         <Row id="user" label="account.user" help="account.userHelp">
           <Input
             id="user"
@@ -384,7 +389,7 @@ function SessionsGroup({ account }: { account: Account }) {
   const fixed = account.source === "environment";
 
   return (
-    <Group title={t("account.groupSessions")}>
+    <Group id="account-sessions" title={t("account.groupSessions")}>
       <div className="flex items-start gap-3 rounded-md border p-4">
         <DevicesIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
         <div className="grid gap-1 text-sm">
@@ -449,7 +454,7 @@ function RemoveGroup() {
   };
 
   return (
-    <Group title={t("account.groupRemove")}>
+    <Group id="account-remove" title={t("account.groupRemove")}>
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-destructive/30 p-4">
         <p className="max-w-md text-sm text-muted-foreground">{t("account.removeNote")}</p>
         <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)}>
@@ -498,6 +503,9 @@ function RemoveGroup() {
     </Group>
   );
 }
+
+// A form inside a group lays its rows out as the group does.
+const formGrid = "grid gap-x-5 gap-y-6 @xl/form:grid-cols-2 [&>*:not([data-half])]:col-span-full";
 
 /** Note is a line the form has to say before anything can be typed. */
 function Note({ icon, children }: { icon?: ReactNode; children: ReactNode }) {

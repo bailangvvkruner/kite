@@ -251,10 +251,13 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
     </div>
   ) : (
     <div className="grid gap-6">
-      <div>
-        <h2 className="text-lg font-semibold">{current.label || current.key}</h2>
-        {current.help && <p className="mt-1 text-sm text-muted-foreground">{current.help}</p>}
-      </div>
+      <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span aria-hidden className="text-xs font-semibold tracking-[0.06em] text-string tabular-nums">
+          {String(sections.indexOf(current) + 1).padStart(2, "0")}
+        </span>
+        <h2 className="font-serif text-[22px] leading-snug font-bold tracking-[0.03em]">{current.label || current.key}</h2>
+        {current.help && <p className="basis-full text-[13.5px] text-muted-foreground">{current.help}</p>}
+      </header>
       <fieldset data-section-form disabled={!writable}>
         <SchemaForm
           key={current.key}
