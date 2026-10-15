@@ -6,8 +6,10 @@ import {
   CheckCircleIcon,
   CloudArrowUpIcon,
   DownloadSimpleIcon,
+  ArrowCircleUpIcon,
   ArrowRightIcon,
   ArrowSquareOutIcon,
+  ArrowUpRightIcon,
   FileZipIcon,
   GitBranchIcon,
   GithubLogoIcon,
@@ -516,6 +518,7 @@ function Checklist() {
             <CheckRow tone="ok" label={t("deploy.contentOK")} />
           )}
           <KiteCheck />
+          <ReleaseCheck />
           {canPublish(d) &&
             (d?.dirty?.length ? (
               <CheckRow tone="pending" label={t("publish.pending", { count: d.dirty.length })} />
@@ -604,12 +607,49 @@ function KiteCheck() {
   );
 }
 
+/**
+ * ReleaseCheck says a Kite newer than this one is out, as the server's daily
+ * check found, and how to move to it: a new binary, or a new image.
+ */
+function ReleaseCheck() {
+  const { t } = useI18n();
+  const kite = useSite().data?.kite;
+  if (!kite?.latest || !kite.latest_url) return null;
+  const running = kite.running ?? "";
+
+  return (
+    <CheckRow
+      tone="news"
+      label={t("release.out", { version: kite.latest })}
+      action={
+        <a
+          href={kite.latest_url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline"
+        >
+          {t("release.notes")}
+          <ArrowUpRightIcon className="size-3.5" />
+        </a>
+      }
+    >
+      <p>
+        {kite.container
+          ? t("deploy.latestImage", { running, image: `ghcr.io/kite-plus/kite:${kite.latest}` })
+          : t("deploy.latestDownload", { running })}
+      </p>
+      <p>{t("deploy.latestOff")}</p>
+    </CheckRow>
+  );
+}
+
 const checkTones = {
   ok: { icon: CheckCircleIcon, className: "text-success" },
   warn: { icon: WarningCircleIcon, className: "text-warning" },
   bad: { icon: XCircleIcon, className: "text-destructive" },
   info: { icon: InfoIcon, className: "text-muted-foreground" },
   pending: { icon: CloudArrowUpIcon, className: "text-string" },
+  news: { icon: ArrowCircleUpIcon, className: "text-primary" },
 };
 
 /** Check is one line of a list of what is as it should be, and what is not. */

@@ -122,6 +122,8 @@ func serveCommand(shape commandShape) *cobra.Command {
 			}
 			defer func() { _ = s.Close() }()
 			pinNotice(cmd, s.Project.Root)
+			releases := releaseChecker()
+			releaseNotice(cmd, releases)
 
 			// The account is read once, here, so that the server is handed a
 			// decision rather than a file to consult. A change made in the
@@ -141,6 +143,7 @@ func serveCommand(shape commandShape) *cobra.Command {
 				Admin:      admin,
 				Auth:       guard,
 				Write:      write,
+				Releases:   releases,
 				Logger:     log,
 			})
 			if err != nil {

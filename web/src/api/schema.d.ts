@@ -1037,7 +1037,10 @@ export interface components {
         };
         KiteRelease: {
             checksums: boolean;
+            container?: boolean;
             deploy?: string;
+            latest?: string;
+            latest_url?: string;
             pinned?: string;
             running?: string;
             wrapper: boolean;

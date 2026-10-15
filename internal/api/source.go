@@ -7,6 +7,7 @@ import (
 	"github.com/kite-plus/kite/internal/apps"
 	"github.com/kite-plus/kite/internal/config"
 	"github.com/kite-plus/kite/internal/content"
+	"github.com/kite-plus/kite/internal/latest"
 	"github.com/kite-plus/kite/internal/lock"
 	"github.com/kite-plus/kite/internal/plugin"
 	"github.com/kite-plus/kite/internal/publish"
@@ -72,6 +73,9 @@ type View struct {
 	// Kitew reports whether kitew is in the project, and how its deploy
 	// workflow gets Kite, as kitew.Deploy says.
 	Kitew func() (installed bool, deploy string)
+	// Latest is the newest release of Kite the last check found, without
+	// asking again. It is nil where releases are not checked for.
+	Latest func() *latest.Release
 
 	// Writer is nil when this deployment may not be written to, which is the
 	// difference between a preview an author is typing into and a read-only
