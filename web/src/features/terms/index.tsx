@@ -1,75 +1,37 @@
 import { useMemo, useState } from "react";
-import { getRouteApi, Link } from "@tanstack/react-router";
-import {
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-} from "@tanstack/react-table";
-import {
-  ArrowsDownUpIcon,
-  ArrowSquareOutIcon,
-  ListIcon,
-  ArrowsMergeIcon,
-  DotsThreeIcon,
-  PencilSimpleIcon,
-  TrashIcon,
-} from "@phosphor-icons/react";
+import { getRouteApi } from "@tanstack/react-router";
+import { ArrowSquareOutIcon, FolderIcon, MagnifyingGlassIcon, TagIcon } from "@phosphor-icons/react";
 
-import type { components } from "@/api/client";
 import { useI18n } from "@/i18n";
-import { useContentTypes, useTaxonomies, useTerms, useWritable } from "@/hooks/useContents";
+import { useContentTypes, useTaxonomies, useTerms } from "@/hooks/useContents";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useKindLabel, useTaxonomyLabel } from "@/hooks/useKindLabel";
-import { followRowLink } from "@/lib/row-link";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTablePagination } from "@/components/data-table";
 import { AppHeader } from "@/components/layout/app-header";
 import { Main } from "@/components/layout/main";
 import { PageTitle } from "@/components/layout/page-title";
+import { EmptyState } from "@/components/empty-state";
+import { FilterChips } from "@/components/filter-chips";
 import { QueryError } from "@/components/query-error";
 import { ReadOnlyNote } from "@/components/read-only-note";
-import { TermBadge } from "@/components/TermBadge";
-import { DEFAULT_PAGE_SIZE } from "@/features/contents/search";
-import { TermDialog, type TermAction, type TermMode } from "./term-dialog";
+import { TermDialog, type TermAction } from "./term-dialog";
+import { CategoryCard } from "./category-card";
+import { TagChip } from "./tag-chip";
 
-type Term = components["schemas"]["TermCount"];
 type Order = "count" | "name";
 
 const route = getRouteApi("/_authenticated/taxonomies/$taxonomy");
 
-// As many cards to a row as the column has room for, each wide enough for a
-// long term beside its menu.
-const grid = "grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3";
-
 /**
  * Terms lists one taxonomy, as a blog's categories or tags page does. Terms
- * are gathered from the items that carry them, so there is nothing to add or
- * delete here: each one leads to its items, which are where it changes.
+ * are gathered from the items that carry them, so there is nothing to add
+ * here; renaming, merging or deleting one rewrites every item that carries
+ * it. Terms with one slug are one term, named as most items write it.
  *
- * A term is only a name and a count, so each gets a card in a grid rather
- * than a table row stretched across the page. Renaming, merging or deleting
- * one rewrites every item that carries it. Terms with one slug are one card,
- * named as most items write it, with the other ways it is written under it.
+ * Categories are few and broad, so each is a card with its year and newest
+ * items; any other taxonomy is a wall of chips, each opening its items.
  */
 export function Terms() {
   const { taxonomy } = route.useParams();
@@ -86,55 +48,30 @@ export function Terms() {
     types.data?.items.find((type) => type.taxonomies?.includes(taxonomy))?.kind ?? "post";
   const name = taxonomyLabel(taxonomy);
   const many = kindLabel.many(kind);
+  const cards = taxonomy === "categories";
   useDocumentTitle(name);
 
   const [action, setAction] = useState<TermAction | null>(null);
   const [order, setOrder] = useState<Order>("count");
   const [search, setSearch] = useState("");
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
 
-  const columns = useMemo<ColumnDef<Term>[]>(
-    () => [
-      {
-        accessorKey: "term",
-        // A term is found by any of the ways it is written.
-        filterFn: (row, _id, search: string) =>
-          [row.original.term, ...(row.original.variants ?? [])].some((name) =>
-            name.toLowerCase().includes(search.toLowerCase()),
-          ),
-        sortingFn: (a, b) => a.original.term.localeCompare(b.original.term, locale),
-      },
-      {
-        accessorKey: "count",
-        // Sorted descending, so terms used alike fall back to reverse name order.
-        sortingFn: (a, b) =>
-          a.original.count - b.original.count ||
-          b.original.term.localeCompare(a.original.term, locale),
-      },
-    ],
-    [locale],
-  );
+  const all = useMemo(() => terms.data?.items ?? [], [terms.data]);
+  const shown = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    // A term is found by any of the ways it is written.
+    const found = needle
+      ? all.filter((term) =>
+          [term.term, ...(term.variants ?? [])].some((each) => each.toLowerCase().includes(needle)),
+        )
+      : all;
+    return [...found].sort((a, b) =>
+      order === "count"
+        ? b.count - a.count || a.term.localeCompare(b.term, locale)
+        : a.term.localeCompare(b.term, locale),
+    );
+  }, [all, search, order, locale]);
 
-  const sorting = useMemo<SortingState>(
-    () => [order === "count" ? { id: "count", desc: true } : { id: "term", desc: false }],
-    [order],
-  );
-  const columnFilters = useMemo(() => (search ? [{ id: "term", value: search }] : []), [search]);
-
-  const table = useReactTable({
-    data: terms.data?.items ?? [],
-    columns,
-    state: { sorting, columnFilters, pagination },
-    onPaginationChange: setPagination,
-    getRowId: (term) => term.term,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-  });
-
-  const matched = table.getFilteredRowModel().rows.length;
-  const rows = table.getRowModel().rows;
+  const shared = { taxonomy, kind, canMerge: all.length > 1, onAction: setAction };
 
   return (
     <>
@@ -155,80 +92,71 @@ export function Terms() {
 
         {terms.error && !terms.data ? (
           <QueryError error={terms.error} onRetry={() => void terms.refetch()} />
+        ) : terms.data && !all.length ? (
+          <EmptyState
+            icon={cards ? FolderIcon : TagIcon}
+            title={t("terms.empty", { name })}
+            note={t("terms.emptyNote", { name, kind: kindLabel.one(kind) })}
+          />
         ) : (
-          <div className="flex flex-1 flex-col gap-4">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Input
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value);
-                  table.firstPage();
-                }}
-                placeholder={t("terms.search", { name })}
-                className="h-8 w-37.5 lg:w-62.5"
+              <div className="relative w-full sm:w-64">
+                <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder={t("terms.search", { name })}
+                  aria-label={t("terms.search", { name })}
+                  className="h-8 ps-8"
+                />
+              </div>
+              <FilterChips
+                label={t("terms.order")}
+                value={order}
+                onChange={setOrder}
+                options={[
+                  { value: "count", label: t("terms.byCount", { kind: many }) },
+                  { value: "name", label: t("terms.byName") },
+                ]}
               />
-              <Select value={order} onValueChange={(value) => setOrder(value as Order)}>
-                <SelectTrigger size="sm" aria-label={t("terms.order")}>
-                  <ArrowsDownUpIcon />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="count">{t("terms.byCount", { kind: many })}</SelectItem>
-                  <SelectItem value="name">{t("terms.byName")}</SelectItem>
-                </SelectContent>
-              </Select>
+              {terms.data && (
+                <span className="ms-auto text-sm text-muted-foreground tabular-nums">
+                  {t("terms.total", { count: all.length, name })}
+                </span>
+              )}
             </div>
 
             {terms.isPending ? (
+              cards ? (
+                <div className={grid}>
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <Skeleton key={i} className="h-64 rounded-xl" />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <Skeleton key={i} className="h-8 w-20 rounded-[9px]" />
+                  ))}
+                </div>
+              )
+            ) : !shown.length ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">{t("list.empty")}</p>
+            ) : cards ? (
               <div className={grid}>
-                {Array.from({ length: 8 }, (_, i) => (
-                  <Skeleton key={i} className="h-24 rounded-xl" />
-                ))}
-              </div>
-            ) : rows.length ? (
-              <div className={grid}>
-                {rows.map((row) => (
-                  <TermCard
-                    key={row.id}
-                    term={row.original}
-                    kind={kind}
-                    taxonomy={taxonomy}
-                    unit={t("terms.unit", {
-                      kind: row.original.count === 1 ? kindLabel.one(kind) : many,
-                    })}
-                    canMerge={(terms.data?.items.length ?? 0) > 1}
-                    onAction={(mode) => setAction({ mode, term: row.original.term })}
-                  />
+                {shown.map((term) => (
+                  <CategoryCard key={term.term} term={term} {...shared} />
                 ))}
               </div>
             ) : (
-              <div className="flex h-32 flex-col items-center justify-center gap-1 rounded-xl border border-dashed text-center">
-                {terms.data?.items.length ? (
-                  <span className="text-muted-foreground">{t("list.empty")}</span>
-                ) : (
-                  <>
-                    <p className="font-medium">{t("terms.empty", { name })}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {t("terms.emptyNote", { name, kind: kindLabel.one(kind) })}
-                    </p>
-                  </>
-                )}
+              <div className="flex flex-wrap gap-2">
+                {shown.map((term) => (
+                  <TagChip key={term.term} term={term} {...shared} />
+                ))}
               </div>
             )}
-
-            <DataTablePagination
-              page={pagination.pageIndex + 1}
-              pageSize={pagination.pageSize}
-              total={matched}
-              summary={t("terms.total", { count: matched, name })}
-              hasPrevious={table.getCanPreviousPage()}
-              hasNext={table.getCanNextPage()}
-              onFirst={() => table.firstPage()}
-              onPrevious={() => table.previousPage()}
-              onNext={() => table.nextPage()}
-              onPageSizeChange={(size) => table.setPageSize(size)}
-              className="mt-auto"
-            />
           </div>
         )}
       </Main>
@@ -237,7 +165,7 @@ export function Terms() {
         <TermDialog
           key={`${action.mode}:${action.term}`}
           taxonomy={taxonomy}
-          terms={terms.data?.items ?? []}
+          terms={all}
           one={kindLabel.one(kind)}
           many={many}
           action={action}
@@ -248,88 +176,6 @@ export function Terms() {
   );
 }
 
-/**
- * TermCard is one term: a click opens its items, the menu also its page on
- * the site and the changes to the term itself.
- */
-function TermCard({
-  term,
-  kind,
-  taxonomy,
-  unit,
-  canMerge,
-  onAction,
-}: {
-  term: Term;
-  kind: string;
-  taxonomy: string;
-  unit: string;
-  canMerge: boolean;
-  onAction: (mode: TermMode) => void;
-}) {
-  const { t } = useI18n();
-  const kindLabel = useKindLabel();
-  const writable = useWritable();
-  const items = { terms: [`${taxonomy}:${term.term}`] };
-
-  return (
-    <div
-      onClick={followRowLink}
-      className="flex cursor-pointer flex-col gap-3 rounded-xl border bg-card p-4 text-card-foreground transition-colors hover:bg-muted/50"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <Link to="/content/$kind" params={{ kind }} search={items} data-row-link className="min-w-0">
-          <TermBadge term={term.term} className="max-w-full truncate text-sm" />
-        </Link>
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="-me-2 -mt-1.5 size-8 shrink-0 p-0 data-[state=open]:bg-muted"
-            >
-              <DotsThreeIcon className="size-4" />
-              <span className="sr-only">{t("list.actions")}</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem asChild>
-              <Link to="/content/$kind" params={{ kind }} search={items}>
-                <ListIcon />
-                {t("terms.viewItems", { kind: kindLabel.many(kind) })}
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <a href={term.url} target="_blank" rel="noreferrer">
-                <ArrowSquareOutIcon />
-                {t("list.open")}
-              </a>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={!writable} onSelect={() => onAction("rename")}>
-              <PencilSimpleIcon />
-              {t("terms.rename")}
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!writable || !canMerge} onSelect={() => onAction("merge")}>
-              <ArrowsMergeIcon />
-              {t("terms.merge")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" disabled={!writable} onSelect={() => onAction("remove")}>
-              <TrashIcon />
-              {t("terms.remove")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        <span className="me-1 text-2xl font-semibold text-foreground tabular-nums">{term.count}</span>
-        {unit}
-      </p>
-      {term.variants?.length ? (
-        <p className="-mt-2 truncate text-xs text-muted-foreground">
-          {t("terms.variants", { list: term.variants.join(t("form.listJoin")) })}
-        </p>
-      ) : null}
-    </div>
-  );
-}
+// As many cards to a row as the column has room for, each wide enough for
+// its newest titles.
+const grid = "grid grid-cols-[repeat(auto-fill,minmax(15.5rem,1fr))] gap-3.5";
