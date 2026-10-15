@@ -22,6 +22,13 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: #e6ebf2;
   --input: #d6dde8;
+  /* Kite: a field's lower edge is a shade darker than its sides, and a
+     faint shadow sits inside its top, so it reads as pressed into the
+     sheet. */
+  --input-edge: #c5cfdd;
+  --input-hover: #b9c4d6;
+  --field-inset: rgb(23 32 54 / 0.04);
+  --field-ring: rgb(74 119 214 / 0.16);
   --ring: #4a77d6;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -74,6 +81,10 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: rgb(255 255 255 / 8%);
   --input: rgb(255 255 255 / 14%);
+  --input-edge: rgb(255 255 255 / 18%);
+  --input-hover: rgb(255 255 255 / 24%);
+  --field-inset: rgb(0 0 0 / 0.25);
+  --field-ring: rgb(74 119 214 / 0.32);
   --ring: #4a77d6;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -124,6 +135,9 @@
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-edge: var(--input-edge);
+  --color-input-hover: var(--input-hover);
+  --color-field-ring: var(--field-ring);
   --color-ring: var(--ring);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);

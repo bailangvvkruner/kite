@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { CheckIcon, CaretUpDownIcon } from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
+import { fieldTrigger } from "@/lib/field";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -57,17 +57,16 @@ export function TimezoneSelect({ id, value, onChange }: Props) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
+        <button
           id={id}
           type="button"
-          variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between font-normal"
+          className={cn(fieldTrigger, "justify-between")}
         >
-          <span className={cn("truncate", !value && "text-muted-foreground")}>{label}</span>
-          <CaretUpDownIcon className="opacity-50" />
-        </Button>
+          <span className={cn("truncate", !value && "text-muted-foreground/70")}>{label}</span>
+          <CaretUpDownIcon className="text-muted-foreground opacity-60" />
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
         <Command>
