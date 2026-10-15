@@ -1,4 +1,5 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { ReadOnlyNote } from '@/components/read-only-note'
 import { cn } from '@/lib/utils'
 import { PublishBar } from './publish-bar'
@@ -24,6 +25,7 @@ type ContentSectionProps = {
 // its title, since the app sidebar is the menu of the sections. A page of
 // several parts lists them on a route beside the form.
 export function ContentSection({ title, desc, children, wide, writes, actions, end }: ContentSectionProps) {
+  useDocumentTitle(title)
   return (
     <SectionsProvider>
       {/* Positioned, so the scroll area's fade ends at the column's foot,
@@ -51,10 +53,17 @@ export function ContentSection({ title, desc, children, wide, writes, actions, e
 function Body({ wide, end, children }: { wide?: boolean; end?: Destination; children: React.ReactNode }) {
   const scroller = useRef<HTMLDivElement>(null)
   const route = useSections().length > 1
+  const more = useMoreBelow(scroller)
   return (
-    // The bottom padding is the fade's height, so a form's last control
-    // scrolls clear of it instead of looking disabled.
-    <div ref={scroller} className='faded-bottom -ms-1.5 h-full min-h-0 w-[calc(100%+0.375rem)] overflow-y-auto scroll-smooth ps-1.5 pe-4 pb-32'>
+    // The foot fades only while more of the page waits below it, so what
+    // ends near the bottom never looks disabled.
+    <div
+      ref={scroller}
+      className={cn(
+        '-ms-1.5 h-full min-h-0 w-[calc(100%+0.375rem)] overflow-y-auto scroll-smooth ps-1.5 pe-4 pb-10',
+        more && 'faded-bottom'
+      )}
+    >
       <div
         className={cn(
           'pt-8',
@@ -66,4 +75,28 @@ function Body({ wide, end, children }: { wide?: boolean; end?: Destination; chil
       </div>
     </div>
   )
+}
+
+// The scroll area's bottom padding, which never holds anything to read.
+const FOOT = 40
+
+/** useMoreBelow says whether a scroll area has content hidden below its foot. */
+function useMoreBelow(area: React.RefObject<HTMLDivElement | null>) {
+  const [more, setMore] = useState(false)
+  useEffect(() => {
+    const element = area.current
+    if (!element) return
+    const check = () =>
+      setMore(element.scrollHeight - element.scrollTop - element.clientHeight > FOOT + 1)
+    check()
+    element.addEventListener('scroll', check, { passive: true })
+    const sizes = new ResizeObserver(check)
+    sizes.observe(element)
+    if (element.firstElementChild) sizes.observe(element.firstElementChild)
+    return () => {
+      element.removeEventListener('scroll', check)
+      sizes.disconnect()
+    }
+  }, [area])
+  return more
 }

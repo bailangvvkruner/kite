@@ -83,6 +83,7 @@ export function Themes() {
               {others.length === 0 ? (
                 // Only the one in use: the app center is where most come from, an upload the other way.
                 <EmptyState
+                  compact
                   icon={PaletteIcon}
                   title={t("themes.noOthers")}
                   note={t("themes.noOthersNote")}
