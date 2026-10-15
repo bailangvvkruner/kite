@@ -64,12 +64,12 @@ export function KiteRoute({
       <ol ref={list} className="relative grid gap-1">
         <span
           aria-hidden
-          className="absolute start-[13px] border-s-[1.5px] border-dashed border-string/60"
+          className="absolute start-[13px] border-s-[1.5px] border-dashed border-input-edge"
           style={{ top: line.top, height: line.length }}
         />
         <span
           aria-hidden
-          className="absolute start-[13px] border-s-[1.5px] border-string transition-[height] duration-300"
+          className="absolute start-[13px] border-s-[1.5px] border-primary transition-[height] duration-300"
           style={{ top: line.top, height: line.reach }}
         />
         {stops.map((stop, i) => {
@@ -81,10 +81,10 @@ export function KiteRoute({
                 className={cn(
                   "relative z-10 grid size-7 shrink-0 place-items-center rounded-full border-[1.5px] bg-background text-[11.5px] font-semibold tabular-nums transition",
                   on
-                    ? "border-string bg-string text-white shadow-[0_0_0_4px_color-mix(in_oklab,var(--string)_22%,transparent)]"
+                    ? "border-primary bg-primary text-primary-foreground shadow-[0_0_0_4px_var(--field-ring)]"
                     : i < current
-                      ? "border-string text-string"
-                      : "border-string/70 text-string/85 group-hover:border-string",
+                      ? "border-primary text-primary"
+                      : "border-input-edge text-muted-foreground group-hover:border-primary group-hover:text-primary",
                 )}
               >
                 {String(i + 1).padStart(2, "0")}

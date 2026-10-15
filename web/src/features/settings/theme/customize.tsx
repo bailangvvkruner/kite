@@ -252,7 +252,7 @@ export function ThemeCustomizer({ name, section }: { name: string; section?: str
   ) : (
     <div className="grid gap-6">
       <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span aria-hidden className="text-xs font-semibold tracking-[0.06em] text-string tabular-nums">
+        <span aria-hidden className="text-xs font-semibold tracking-[0.06em] text-primary tabular-nums">
           {String(sections.indexOf(current) + 1).padStart(2, "0")}
         </span>
         <h2 className="font-serif text-[22px] leading-snug font-bold tracking-[0.03em]">{current.label || current.key}</h2>

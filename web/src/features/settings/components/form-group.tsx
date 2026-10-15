@@ -37,7 +37,7 @@ export function Group({
     >
       <header className="mb-6 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         {number && (
-          <span aria-hidden className="text-xs font-semibold tracking-[0.06em] text-string tabular-nums">
+          <span aria-hidden className="text-xs font-semibold tracking-[0.06em] text-primary tabular-nums">
             {number}
           </span>
         )}
