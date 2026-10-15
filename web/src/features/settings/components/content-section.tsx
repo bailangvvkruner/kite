@@ -27,8 +27,10 @@ export function ContentSection({ title, desc, children, wide, writes, actions, e
   return (
     <SectionsProvider>
       {/* Positioned, so the scroll area's fade ends at the column's foot,
-          above the studio's footer rather than over it. */}
-      <div className='relative flex min-h-0 flex-1 flex-col overflow-hidden'>
+          above the studio's footer rather than over it. Both clipping boxes
+          reach a little past the column's start, so the route's lit stop
+          keeps its halo. */}
+      <div className='relative -ms-1.5 flex min-h-0 flex-1 flex-col overflow-hidden ps-1.5'>
         <header className='flex flex-none flex-wrap items-end gap-x-6 gap-y-3 border-b pb-5'>
           <div className='min-w-0 flex-1'>
             <h1 className='text-2xl font-semibold tracking-tight sm:text-[1.625rem]'>{title}</h1>
@@ -52,7 +54,7 @@ function Body({ wide, end, children }: { wide?: boolean; end?: Destination; chil
   return (
     // The bottom padding is the fade's height, so a form's last control
     // scrolls clear of it instead of looking disabled.
-    <div ref={scroller} className='faded-bottom h-full min-h-0 w-full overflow-y-auto scroll-smooth pe-4 pb-32'>
+    <div ref={scroller} className='faded-bottom -ms-1.5 h-full min-h-0 w-[calc(100%+0.375rem)] overflow-y-auto scroll-smooth ps-1.5 pe-4 pb-32'>
       <div
         className={cn(
           'pt-8',
