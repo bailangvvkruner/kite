@@ -2,14 +2,16 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   WarningCircleIcon,
+  CaretDownIcon,
   CheckCircleIcon,
   CloudArrowUpIcon,
   DownloadSimpleIcon,
+  ArrowRightIcon,
   ArrowSquareOutIcon,
   FileZipIcon,
   GitBranchIcon,
+  GithubLogoIcon,
   InfoIcon,
-  PackageIcon,
   PushPinIcon,
   UploadSimpleIcon,
   XCircleIcon,
@@ -29,27 +31,37 @@ import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { FilterChips } from "@/components/filter-chips";
 import { PasswordInput } from "@/components/password-input";
 import { AppHeader } from "@/components/layout/app-header";
 import { Main } from "@/components/layout/main";
 import { PageTitle } from "@/components/layout/page-title";
 import { SectionCard } from "@/components/section-card";
-import { DeliveryProgress, PublishProblems } from "@/components/publish/Delivery";
+import { checkedAgo, DeliveryProgress, PublishProblems } from "@/components/publish/Delivery";
 import { PublishDialog } from "@/components/publish/PublishDialog";
 import { PublishBar } from "@/features/settings/components/publish-bar";
+
+type Method = "push" | "export";
 
 /**
  * Deploying is how a site written here gets online. A static site has two
  * ways: an archive uploaded by hand, which needs nothing but a place to put
  * files, and a push to a git repository, whose host then builds and serves it.
+ * One way shows at a time, the one a site in git already uses first; what
+ * either way needs before going live is checked beside it.
  */
 export function Deploy() {
   const { t } = useI18n();
   useDocumentTitle(t("nav.deploy"));
+  const delivery = useDelivery();
+  const [chosen, setChosen] = useState<Method | null>(null);
+  const inGit = canPublish(delivery.data);
+  const method = chosen ?? (inGit ? "push" : "export");
 
   return (
     <>
@@ -57,15 +69,34 @@ export function Deploy() {
       <Main className="flex flex-1 flex-col gap-5">
         <PageTitle title={t("nav.deploy")} description={t("deploy.note")} />
         <PublishBar className="mb-0 lg:mb-0" />
-        {/* How far the last change has gone leads, across the sheet; the ways
-            to set up and to export follow side by side. */}
-        <PushCard />
-        <div className="grid items-start gap-5 xl:grid-cols-2">
-          <GitHubCard />
-          <div className="grid gap-5">
-            <ExportCard />
-            <KiteCard />
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="grid min-w-0 gap-4">
+            <FilterChips
+              label={t("deploy.methods")}
+              value={method}
+              onChange={setChosen}
+              options={[
+                { value: "push", label: t("deploy.methodPush"), icon: GitBranchIcon },
+                { value: "export", label: t("deploy.methodExport"), icon: FileZipIcon },
+              ]}
+            />
+            {delivery.isPending && !chosen ? (
+              <Skeleton className="h-40 w-full rounded-xl" />
+            ) : method === "export" ? (
+              <ExportCard />
+            ) : inGit ? (
+              <>
+                <DeliveryCard />
+                <GitHubCard />
+              </>
+            ) : (
+              <>
+                <GitHubCard />
+                <ManualCard />
+              </>
+            )}
           </div>
+          <Checklist />
         </div>
       </Main>
     </>
@@ -75,11 +106,7 @@ export function Deploy() {
 function ExportCard() {
   const { t } = useI18n();
   const problem = useProblem();
-  const site = useSite();
   const exporting = useExportSite();
-
-  const address = site.data?.base_url ?? "";
-  const unreadable = site.data?.problems?.length ?? 0;
 
   const start = () =>
     exporting.mutate(undefined, {
@@ -99,26 +126,11 @@ function ExportCard() {
 
   return (
     <SectionCard icon={FileZipIcon} title={t("deploy.export")} description={t("deploy.exportNote")}>
-      <div className="grid gap-4">
-        {site.isPending ? (
-          <Skeleton className="h-16 w-full" />
-        ) : (
-          <ul className="grid gap-2 text-sm">
-            {isLocal(address) ? (
-              <Check tone="warn">
-                {t("deploy.addressLocal", { url: address || "—" })}{" "}
-                <Link to="/settings" className="font-medium text-brand hover:underline">
-                  {t("deploy.addressFix")}
-                </Link>
-              </Check>
-            ) : (
-              <Check tone="ok">{t("deploy.addressOK", { url: address })}</Check>
-            )}
-            <Check tone="info">{t("deploy.draftsNote")}</Check>
-            {unreadable > 0 && <Check tone="bad">{t("deploy.problems", { count: unreadable })}</Check>}
-          </ul>
-        )}
-
+      <div className="grid gap-4 text-sm">
+        <p className="flex items-start gap-2 text-muted-foreground">
+          <InfoIcon className="mt-0.5 size-4 shrink-0" />
+          {t("deploy.draftsNote")}
+        </p>
         {said && (
           <Alert variant="destructive">
             <XCircleIcon />
@@ -126,7 +138,6 @@ function ExportCard() {
             {said.detail && <AlertDescription className="break-all">{said.detail}</AlertDescription>}
           </Alert>
         )}
-
         <div>
           <Button onClick={start} disabled={exporting.isPending}>
             {exporting.isPending ? <Spinner /> : <DownloadSimpleIcon />}
@@ -184,8 +195,22 @@ function GitHubCard() {
       ? problem(connect.error.problem.code, connect.error.problem.detail, connect.error.problem.fix)
       : problem(connect.error instanceof ApiError ? connect.error.code : undefined, connect.error.message);
 
+  // A form opened only on asking, so the card reads as one line until then.
+  const opener =
+    writable && state && !connected && !editing ? (
+      <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+        {t("deploy.githubOpen")}
+      </Button>
+    ) : null;
+
   return (
-    <SectionCard icon={GitBranchIcon} title={t("deploy.github")} description={t("deploy.githubNote")}>
+    <SectionCard
+      icon={GithubLogoIcon}
+      title={t("deploy.github")}
+      description={t("deploy.githubNote")}
+      aside={opener}
+    >
+      {(!state || connected || editing || Boolean(done?.done?.length)) && (
       <div className="grid gap-4 text-sm">
         {!state ? (
           <Skeleton className="h-24 w-full" />
@@ -215,7 +240,7 @@ function GitHubCard() {
                 {done.pages_url && <Check tone="info">{t("deploy.githubPagesAt", { url: done.pages_url })}</Check>}
               </ul>
             )}
-            {writable && (!connected || editing) && (
+            {writable && editing && (
               <form className="grid gap-4" onSubmit={submit}>
                 <div className="grid gap-2">
                   <Label htmlFor="github-repo">{t("deploy.githubRepo")}</Label>
@@ -303,6 +328,7 @@ function GitHubCard() {
           </>
         )}
       </div>
+      )}
     </SectionCard>
   );
 }
@@ -333,106 +359,190 @@ const hosts: Record<string, string> = {
 };
 
 /**
- * PushCard follows a push to the site, whatever hosts it. Where the server
- * can tell which host that is, from what the host recorded on GitHub, it is
- * named; the steps for a site not yet in git are GitHub Pages', the host
- * that needs nothing but the repository.
+ * DeliveryCard follows a push to the site, whatever hosts it. Where the
+ * server can tell which host that is, from what the host recorded on GitHub,
+ * it is named.
  */
-function PushCard() {
-  const { t } = useI18n();
+function DeliveryCard() {
+  const { t, locale } = useI18n();
   const delivery = useDelivery();
   const publish = usePublish([]);
   const writable = useWritable();
   const [publishing, setPublishing] = useState(false);
-  const dirty = delivery.data?.dirty ?? [];
-  const host = hosts[delivery.data?.deploy_host ?? ""];
+  const d = delivery.data;
+  const dirty = d?.dirty ?? [];
+  const host = hosts[d?.deploy_host ?? ""];
+  const where = [d?.branch && `${d.remote ?? "origin"}/${d.branch}`, checkedAgo(d?.checked_at, locale, t)]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <SectionCard icon={CloudArrowUpIcon} title={t("deploy.push")} description={t("deploy.pushNote")}>
+    <SectionCard
+      icon={CloudArrowUpIcon}
+      title={t("publish.delivery")}
+      description={host ? `${t("deploy.pushReady")} ${t("deploy.host", { host })}` : t("deploy.pushReady")}
+      aside={where && <span className="text-xs text-muted-foreground">{where}</span>}
+    >
       <div className="grid gap-4 text-sm">
-        {delivery.isPending ? (
-          <Skeleton className="h-24 w-full" />
-        ) : canPublish(delivery.data) ? (
-          <>
-            <div className="rounded-xl bg-muted/50 px-2 pt-5 pb-4">
-              <DeliveryProgress delivery={delivery.data} />
-            </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-              <div className="grid min-w-0 flex-1 gap-1 text-muted-foreground">
-                <p>{t("deploy.pushReady")}</p>
-                {host && <p>{t("deploy.host", { host })}</p>}
-              </div>
-              {writable && dirty.length > 0 ? (
-                <Button onClick={() => setPublishing(true)}>
-                  <UploadSimpleIcon />
-                  {t("publish.publishAll", { count: dirty.length })}
-                </Button>
-              ) : writable && delivery.data?.ahead ? (
-                <Button disabled={publish.pending} onClick={() => void publish.push()}>
-                  {publish.pending ? <Spinner /> : <UploadSimpleIcon />}
-                  {t("publish.pushCommits", { count: delivery.data.ahead })}
-                </Button>
-              ) : null}
-              {delivery.data?.deployed === "done" && delivery.data.deployed_url && (
-                <Button variant="outline" asChild>
-                  <a href={delivery.data.deployed_url} target="_blank" rel="noreferrer">
-                    <ArrowSquareOutIcon />
-                    {t("publish.viewSite")}
-                  </a>
-                </Button>
-              )}
-            </div>
-            <PublishProblems publish={publish} />
-            <PublishDialog
-              ids={[]}
-              paths={dirty}
-              open={publishing}
-              onOpenChange={setPublishing}
-              onDone={() => undefined}
-              title={t("publish.allTitle")}
-              description={t("publish.allNote", { paths: dirty.join(", ") })}
-            />
-          </>
-        ) : (
-          <>
-            <p>{t("deploy.githubSteps")}</p>
-            <ol className="grid list-decimal gap-3 ps-5 marker:text-muted-foreground">
-              <li>{t("deploy.step1")}</li>
-              <li>
-                {t("deploy.step2")}
-                <pre className="mt-2 overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs leading-relaxed">
-                  {[
-                    "git init",
-                    "git add .",
-                    'git commit -m "first commit"',
-                    "git branch -M main",
-                    "git remote add origin https://github.com/<you>/<repo>.git",
-                    "git push -u origin main",
-                  ].join("\n")}
-                </pre>
-              </li>
-              <li>{t("deploy.step3")}</li>
-              <li>{t("deploy.step4")}</li>
-            </ol>
-          </>
+        <div className="rounded-xl bg-muted/50 px-2 pt-5 pb-4">
+          <DeliveryProgress delivery={d} />
+        </div>
+        {((writable && (dirty.length > 0 || Boolean(d?.ahead))) || (d?.deployed === "done" && d.deployed_url)) && (
+          <div className="flex flex-wrap gap-2">
+            {writable && dirty.length > 0 ? (
+              <Button onClick={() => setPublishing(true)}>
+                <UploadSimpleIcon />
+                {t("publish.publishAll", { count: dirty.length })}
+              </Button>
+            ) : writable && d?.ahead ? (
+              <Button disabled={publish.pending} onClick={() => void publish.push()}>
+                {publish.pending ? <Spinner /> : <UploadSimpleIcon />}
+                {t("publish.pushCommits", { count: d.ahead })}
+              </Button>
+            ) : null}
+            {d?.deployed === "done" && d.deployed_url && (
+              <Button variant="outline" asChild>
+                <a href={d.deployed_url} target="_blank" rel="noreferrer">
+                  <ArrowSquareOutIcon />
+                  {t("publish.viewSite")}
+                </a>
+              </Button>
+            )}
+          </div>
         )}
+        <PublishProblems publish={publish} />
+        <PublishDialog
+          ids={[]}
+          paths={dirty}
+          open={publishing}
+          onOpenChange={setPublishing}
+          onDone={() => undefined}
+          title={t("publish.allTitle")}
+          description={t("publish.allNote", { paths: dirty.join(", ") })}
+        />
       </div>
     </SectionCard>
   );
 }
 
 /**
- * KiteCard says which Kite release builds the site: the one kite.lock pins,
+ * ManualCard is the way into git without a token: the terminal steps for
+ * GitHub Pages, the host that needs nothing but the repository. Folded, as
+ * connecting GitHub does them all.
+ */
+function ManualCard() {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} asChild>
+      <section data-slot="card" className="rounded-xl border bg-card text-sm">
+        <CollapsibleTrigger className="flex w-full items-center gap-2 px-5 py-4 text-start outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:px-6">
+          <GitBranchIcon className="size-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1">
+            <span className="font-medium">{t("deploy.manual")}</span>
+            <span className="text-muted-foreground"> · {t("deploy.manualNote")}</span>
+          </span>
+          <CaretDownIcon className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="CollapsibleContent">
+          <ol className="grid list-decimal gap-3 border-t px-5 py-4 ps-10 marker:text-muted-foreground sm:px-6 sm:ps-11">
+            <li>{t("deploy.step1")}</li>
+            <li>
+              {t("deploy.step2")}
+              <pre className="mt-2 overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs leading-relaxed">
+                {[
+                  "git init",
+                  "git add .",
+                  'git commit -m "first commit"',
+                  "git branch -M main",
+                  "git remote add origin https://github.com/<you>/<repo>.git",
+                  "git push -u origin main",
+                ].join("\n")}
+              </pre>
+            </li>
+            <li>{t("deploy.step3")}</li>
+            <li>{t("deploy.step4")}</li>
+          </ol>
+        </CollapsibleContent>
+      </section>
+    </Collapsible>
+  );
+}
+
+/**
+ * Checklist is what going live needs whichever way the site goes: an
+ * address of its own, content that reads, a Kite release the deploy builds
+ * with, and, for a site in git, what still waits to be published. Each line
+ * opens to say why and how to fix it.
+ */
+function Checklist() {
+  const { t } = useI18n();
+  const site = useSite();
+  const delivery = useDelivery();
+  const address = site.data?.base_url ?? "";
+  const unreadable = site.data?.problems?.length ?? 0;
+  const d = delivery.data;
+
+  return (
+    <section aria-labelledby="deploy-checks" className="grid gap-2">
+      <h2 id="deploy-checks" className="px-1 text-xs font-medium text-muted-foreground">
+        {t("deploy.checks")}
+      </h2>
+      {site.isPending ? (
+        <Skeleton className="h-40 w-full rounded-xl" />
+      ) : (
+        <ul className="rounded-xl border bg-card px-4 py-1">
+          {isLocal(address) ? (
+            <CheckRow
+              tone="warn"
+              label={t("deploy.addressLocal", { url: address || "—" })}
+              action={
+                <Link to="/settings" className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline">
+                  {t("deploy.addressFix")}
+                  <ArrowRightIcon className="size-3.5" />
+                </Link>
+              }
+            >
+              {t("deploy.addressLocalWhy")}
+            </CheckRow>
+          ) : (
+            <CheckRow tone="ok" label={t("deploy.addressOK", { url: address })} />
+          )}
+          {unreadable > 0 ? (
+            <CheckRow tone="bad" label={t("deploy.problems", { count: unreadable })}>
+              {t("deploy.problemsWhy")}
+            </CheckRow>
+          ) : (
+            <CheckRow tone="ok" label={t("deploy.contentOK")} />
+          )}
+          <KiteCheck />
+          {canPublish(d) &&
+            (d?.dirty?.length ? (
+              <CheckRow tone="pending" label={t("publish.pending", { count: d.dirty.length })} />
+            ) : d?.ahead ? (
+              <CheckRow tone="pending" label={t("publish.toPush", { count: d.ahead })} />
+            ) : (
+              <CheckRow tone="ok" label={t("deploy.nothingPending")} />
+            ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/**
+ * KiteCheck says which Kite release builds the site: the one kite.lock pins,
  * which kitew runs on this computer and in the deploy, against the one
  * serving the studio, and moves the pin when the two differ.
  */
-function KiteCard() {
+function KiteCheck() {
   const { t } = useI18n();
   const problem = useProblem();
   const site = useSite();
   const writable = useWritable();
   const pin = usePinKite();
   const kite = site.data?.kite;
+  if (!kite) return null;
 
   const pinNow = () =>
     pin.mutate(undefined, {
@@ -445,7 +555,7 @@ function KiteCard() {
 
   // A pin to move, or one to complete with the checksums it lacks.
   const action =
-    kite?.running && kite.wrapper && writable
+    kite.running && kite.wrapper && writable
       ? !kite.pinned
         ? "deploy.kitePin"
         : kite.pinned !== kite.running
@@ -455,40 +565,42 @@ function KiteCard() {
             : null
       : null;
 
+  const other = Boolean(kite.pinned && kite.running && kite.running !== kite.pinned);
+  const label = !kite.pinned
+    ? t(kite.wrapper ? "deploy.kiteNoPinShort" : "deploy.kiteNoneShort")
+    : other
+      ? t("deploy.kiteOtherShort", { pinned: kite.pinned })
+      : !kite.wrapper
+        ? t("deploy.kiteNoWrapperShort")
+        : kite.deploy === "self"
+          ? t("deploy.kiteSelfShort")
+          : t("deploy.kiteOK", { pinned: kite.pinned });
+  const warn = !kite.pinned || other || !kite.wrapper || kite.deploy === "self";
+
   return (
-    <SectionCard icon={PackageIcon} title={t("deploy.kite")} description={t("deploy.kiteNote")}>
-      <div className="grid gap-4 text-sm">
-        {!kite ? (
-          <Skeleton className="h-12 w-full" />
-        ) : (
-          <>
-            <ul className="grid gap-2">
-              {!kite.pinned ? (
-                <Check tone="warn">{t(kite.wrapper ? "deploy.kiteNoPin" : "deploy.kiteNone")}</Check>
-              ) : kite.running && kite.running !== kite.pinned ? (
-                <Check tone="warn">{t("deploy.kiteOther", { pinned: kite.pinned, running: kite.running })}</Check>
-              ) : (
-                <Check tone="ok">{t(kite.running ? "deploy.kiteSame" : "deploy.kitePinnedOnly", { pinned: kite.pinned })}</Check>
-              )}
-              {kite.pinned && !kite.wrapper && <Check tone="warn">{t("deploy.kiteNoWrapper")}</Check>}
-              {kite.pinned && !kite.checksums && <Check tone="info">{t("deploy.kiteNoChecksums")}</Check>}
-              {kite.deploy === "self" && <Check tone="warn">{t("deploy.kiteSelf")}</Check>}
-            </ul>
-            {!kite.wrapper && (
-              <pre className="overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs">kite wrapper</pre>
-            )}
-            {action && (
-              <div>
-                <Button variant="outline" onClick={pinNow} disabled={pin.isPending}>
-                  {pin.isPending ? <Spinner /> : <PushPinIcon />}
-                  {t(action, { running: kite.running ?? "" })}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </SectionCard>
+    <CheckRow tone={warn ? "warn" : "ok"} label={label}>
+      {!kite.pinned ? (
+        <p>{t(kite.wrapper ? "deploy.kiteNoPin" : "deploy.kiteNone")}</p>
+      ) : other ? (
+        <p>{t("deploy.kiteOther", { pinned: kite.pinned, running: kite.running ?? "" })}</p>
+      ) : (
+        <p>{t(kite.running ? "deploy.kiteSame" : "deploy.kitePinnedOnly", { pinned: kite.pinned })}</p>
+      )}
+      {kite.pinned && !kite.wrapper && <p>{t("deploy.kiteNoWrapper")}</p>}
+      {kite.pinned && !kite.checksums && <p>{t("deploy.kiteNoChecksums")}</p>}
+      {kite.deploy === "self" && <p>{t("deploy.kiteSelf")}</p>}
+      {!kite.wrapper && (
+        <pre className="overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs text-foreground">kite wrapper</pre>
+      )}
+      {action && (
+        <div>
+          <Button variant="outline" size="sm" onClick={pinNow} disabled={pin.isPending}>
+            {pin.isPending ? <Spinner /> : <PushPinIcon />}
+            {t(action, { running: kite.running ?? "" })}
+          </Button>
+        </div>
+      )}
+    </CheckRow>
   );
 }
 
@@ -497,15 +609,64 @@ const checkTones = {
   warn: { icon: WarningCircleIcon, className: "text-warning" },
   bad: { icon: XCircleIcon, className: "text-destructive" },
   info: { icon: InfoIcon, className: "text-muted-foreground" },
+  pending: { icon: CloudArrowUpIcon, className: "text-string" },
 };
 
-/** Check is one thing the export will do, and whether it is as it should be. */
+/** Check is one line of a list of what is as it should be, and what is not. */
 function Check({ tone, children }: { tone: keyof typeof checkTones; children: ReactNode }) {
   const { icon: Icon, className } = checkTones[tone];
   return (
     <li className="flex items-start gap-2">
       <Icon className={cn("mt-0.5 size-4 shrink-0", className)} />
       <span>{children}</span>
+    </li>
+  );
+}
+
+/**
+ * CheckRow is one line of the checklist: how it stands, a way to fix it
+ * under it, and when there is more to say, the line opens to say it.
+ */
+function CheckRow({
+  tone,
+  label,
+  action,
+  children,
+}: {
+  tone: keyof typeof checkTones;
+  label: ReactNode;
+  action?: ReactNode;
+  children?: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const { icon: Icon, className } = checkTones[tone];
+  const head = (
+    <>
+      <Icon className={cn("mt-0.5 size-4 shrink-0", className)} />
+      <span className="min-w-0 flex-1 break-words">{label}</span>
+    </>
+  );
+  return (
+    <li className="border-t py-2.5 text-sm first:border-t-0">
+      {children ? (
+        <Collapsible open={open} onOpenChange={setOpen}>
+          <CollapsibleTrigger className="-mx-1 flex w-[calc(100%+0.5rem)] items-start gap-2 rounded-md px-1 text-start outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+            {head}
+            <CaretDownIcon
+              className={cn("mt-1 size-3 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+            />
+          </CollapsibleTrigger>
+          {action && <div className="ps-6 pt-1">{action}</div>}
+          <CollapsibleContent className="CollapsibleContent">
+            <div className="grid gap-2 ps-6 pt-2 pb-0.5 text-[13px] text-muted-foreground">{children}</div>
+          </CollapsibleContent>
+        </Collapsible>
+      ) : (
+        <>
+          <div className="flex items-start gap-2">{head}</div>
+          {action && <div className="ps-6 pt-1">{action}</div>}
+        </>
+      )}
     </li>
   );
 }
