@@ -28,6 +28,22 @@ const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
+// Kite: the rail's edge drags it between these widths, in pixels; dragged
+// well past the narrowest it folds. The width is the viewer's own, kept in
+// this browser.
+const SIDEBAR_WIDTH_KEY = 'kite.sidebar.width'
+const SIDEBAR_MIN_WIDTH = 208
+const SIDEBAR_MAX_WIDTH = 384
+const SIDEBAR_FOLD_WIDTH = 152
+
+function storedWidth(): number | null {
+  try {
+    const width = Number(localStorage.getItem(SIDEBAR_WIDTH_KEY))
+    return width >= SIDEBAR_MIN_WIDTH && width <= SIDEBAR_MAX_WIDTH ? width : null
+  } catch {
+    return null
+  }
+}
 
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed'
@@ -37,6 +53,9 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  setWidth: (width: number) => void
+  resizing: boolean
+  setResizing: (resizing: boolean) => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -72,6 +91,18 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
+  const [width, setWidth] = React.useState(storedWidth)
+  const [resizing, setResizing] = React.useState(false)
+
+  // A drag is kept once it ends, rather than at every step of it.
+  React.useEffect(() => {
+    if (resizing || width === null) return
+    try {
+      localStorage.setItem(SIDEBAR_WIDTH_KEY, String(width))
+    } catch {
+      // Without storage the width lasts until the page reloads.
+    }
+  }, [width, resizing])
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -129,8 +160,11 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      setWidth,
+      resizing,
+      setResizing,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, resizing]
   )
 
   return (
@@ -138,15 +172,16 @@ function SidebarProvider({
       <TooltipProvider delayDuration={0}>
         <div
           data-slot='sidebar-wrapper'
+          data-resizing={resizing || undefined}
           style={
             {
-              '--sidebar-width': SIDEBAR_WIDTH,
+              '--sidebar-width': width === null ? SIDEBAR_WIDTH : `${width}px`,
               '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
           }
           className={cn(
-            'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar',
+            'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar data-resizing:select-none',
             className
           )}
           {...props}
@@ -170,7 +205,7 @@ function Sidebar({
   variant?: 'sidebar' | 'floating' | 'inset'
   collapsible?: 'offcanvas' | 'icon' | 'none'
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, state, openMobile, setOpenMobile, resizing } = useSidebar()
 
   if (collapsible === 'none') {
     return (
@@ -226,6 +261,7 @@ function Sidebar({
         data-slot='sidebar-gap'
         className={cn(
           'relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear',
+          resizing && 'transition-none',
           'group-data-[collapsible=offcanvas]:w-0',
           'group-data-[side=right]:rotate-180',
           variant === 'floating' || variant === 'inset'
@@ -237,6 +273,7 @@ function Sidebar({
         data-slot='sidebar-container'
         className={cn(
           'fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[inset-inline,width] duration-200 ease-linear md:flex',
+          resizing && 'transition-none',
           side === 'left'
             ? 'inset-s-0 group-data-[collapsible=offcanvas]:-inset-s-[calc(var(--sidebar-width))]'
             : 'inset-e-0 group-data-[collapsible=offcanvas]:-inset-e-[calc(var(--sidebar-width))]',
@@ -286,8 +323,36 @@ function SidebarTrigger({
   )
 }
 
+// Kite: a click on the rail folds or unfolds it, as before; a drag sets its
+// width, unfolding it on the way out and folding it when dragged well in.
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, open, setOpen, setWidth, setResizing } = useSidebar()
+  const drag = React.useRef<{
+    from: number
+    edge: number
+    right: boolean
+    start: number | null
+    moved: boolean
+  } | null>(null)
+
+  const follow = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const current = drag.current
+    if (!current) return
+    if (!current.moved) {
+      if (Math.abs(event.clientX - current.from) < 4) return
+      current.moved = true
+      setResizing(true)
+    }
+    const width = current.right ? current.edge - event.clientX : event.clientX - current.edge
+    if (width < SIDEBAR_FOLD_WIDTH) {
+      // Folded, it unfolds again at the width the drag began with.
+      if (current.start !== null) setWidth(current.start)
+      if (open) setOpen(false)
+      return
+    }
+    if (!open) setOpen(true)
+    setWidth(Math.round(Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width))))
+  }
 
   return (
     <button
@@ -295,11 +360,37 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
       data-slot='sidebar-rail'
       aria-label='Toggle Sidebar'
       tabIndex={-1}
-      onClick={toggleSidebar}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return
+        // Measured from the page's edge, since a folded rail sits off it.
+        const page = event.currentTarget.closest('[data-slot=sidebar-wrapper]')?.getBoundingClientRect()
+        const right = event.currentTarget.closest('[data-side]')?.getAttribute('data-side') === 'right'
+        const shown = event.currentTarget.closest('[data-slot=sidebar-container]')?.getBoundingClientRect().width
+        if (!page) return
+        event.currentTarget.setPointerCapture(event.pointerId)
+        drag.current = {
+          from: event.clientX,
+          edge: right ? page.right : page.left,
+          right,
+          start: open && shown ? Math.round(shown) : null,
+          moved: false,
+        }
+      }}
+      onPointerMove={follow}
+      onPointerUp={() => {
+        const moved = drag.current?.moved
+        drag.current = null
+        if (moved) setResizing(false)
+        else toggleSidebar()
+      }}
+      onPointerCancel={() => {
+        if (drag.current?.moved) setResizing(false)
+        drag.current = null
+      }}
       title='Toggle Sidebar'
       className={cn(
-        'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-inset-e-4 group-data-[side=right]:inset-s-0 after:absolute after:inset-y-0 after:inset-s-1/2 after:w-0.5 hover:after:bg-sidebar-border sm:flex',
-        'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
+        'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-inset-e-4 group-data-[side=right]:inset-s-0 after:absolute after:inset-y-0 after:inset-s-1/2 after:w-0.5 hover:after:bg-sidebar-border in-data-resizing:after:bg-primary/50 sm:flex',
+        'cursor-col-resize',
         '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
         'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:start-full hover:group-data-[collapsible=offcanvas]:bg-sidebar',
         '[[data-side=left][data-collapsible=offcanvas]_&]:-inset-e-2',
@@ -307,7 +398,6 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
 
         // RTL support
         'rtl:translate-x-1/2',
-        'rtl:in-data-[side=left]:cursor-e-resize rtl:in-data-[side=right]:cursor-w-resize',
         'rtl:[[data-side=left][data-state=collapsed]_&]:cursor-w-resize rtl:[[data-side=right][data-state=collapsed]_&]:cursor-e-resize',
         className
       )}
