@@ -1243,6 +1243,46 @@ func TestAPostThatGivesNoDateShowsNone(t *testing.T) {
 	}
 }
 
+// The Comments plugin guessed Kite Plus Comments' accent from a post's first
+// link, which in the default theme is a muted term under the title. The
+// theme marks the spot for the thread and names its accent and serif there.
+func TestTheDefaultThemeNamesTheCommentsLook(t *testing.T) {
+	f := newFixture(t, 2)
+	th, err := theme.Load(themes.Default())
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.engine = theme.NewEngine(theme.Options{
+		Sources: []theme.Source{{Name: "default", FS: th.Layouts}},
+		Links:   f.resolve,
+		Words:   theme.NewWords("en", th.Packs),
+	})
+	for _, c := range []struct {
+		accent any
+		want   string
+	}{
+		{nil, "#7d5c3c"},
+		{"#a3473b", "#a3473b"},
+	} {
+		out := filepath.Join(f.root, fmt.Sprint("out-", c.want[1:]))
+		f.run(t, out, func(o *build.Options) {
+			if c.accent != nil {
+				o.Site.ThemeSettings = map[string]any{"accent": c.accent}
+			}
+		})
+		page := readFile(t, out, "posts/post-01/index.html")
+		spot := `<section class="kite-comments" data-kite-comments data-accent="` + c.want + `" data-font="serif"></section>`
+		at := strings.Index(page, spot)
+		if at < 0 {
+			t.Errorf("accent %v: no spot for the thread naming %s:\n%s", c.accent, c.want, excerptOf(page, "kite-comments"))
+			continue
+		}
+		if at < strings.Index(page, `class="neighbors"`) || at > strings.Index(page, "</main>") {
+			t.Errorf("accent %v: the thread's spot is not between the neighbors and the end of main", c.accent)
+		}
+	}
+}
+
 // metaOf is what the line under a post's title says.
 func metaOf(page string) string {
 	const open = `<p class="meta">`

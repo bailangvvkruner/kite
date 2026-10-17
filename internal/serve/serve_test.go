@@ -1258,7 +1258,7 @@ func TestAPreviewTriesAThemeOnTheWholeSite(t *testing.T) {
 	}
 
 	// The site itself is untouched.
-	if site := call(t, handler, http.MethodGet, "/posts/post-01/", nil); strings.Contains(site.Body.String(), "data-accent") {
+	if site := call(t, handler, http.MethodGet, "/posts/post-01/", nil); strings.Contains(site.Body.String(), "paper.css") {
 		t.Error("the site is drawn with the theme being tried")
 	}
 	if after, _ := os.ReadFile(filepath.Join(root, "kite.yaml")); string(after) != string(config) {
