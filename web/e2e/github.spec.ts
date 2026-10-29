@@ -45,7 +45,9 @@ test("connecting GitHub says what stopped it, then what it did", async ({ page }
   });
 
   await page.goto("/admin/deploy");
+  await page.getByRole("button", { name: "Push to git" }).click();
   const card = page.locator('[data-slot="card"]').filter({ hasText: "Connect GitHub" });
+  await card.getByRole("button", { name: "Set up" }).click();
   await card.getByLabel("Repository").fill("octocat/site");
   const create = card.getByRole("link", { name: "Create one on GitHub" });
   await expect(create).toHaveAttribute("href", /target_name=octocat/);

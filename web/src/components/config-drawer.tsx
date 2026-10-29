@@ -1,12 +1,9 @@
 import { type SVGProps } from 'react'
 import { Root as Radio, Item } from '@radix-ui/react-radio-group'
-import { CircleCheck, RotateCcw, Settings } from 'lucide-react'
+import { CheckCircleIcon, ArrowCounterClockwiseIcon, GearSixIcon } from '@phosphor-icons/react'
 import { IconLayoutCompact } from '@/assets/custom/icon-layout-compact'
 import { IconLayoutDefault } from '@/assets/custom/icon-layout-default'
 import { IconLayoutFull } from '@/assets/custom/icon-layout-full'
-import { IconSidebarFloating } from '@/assets/custom/icon-sidebar-floating'
-import { IconSidebarInset } from '@/assets/custom/icon-sidebar-inset'
-import { IconSidebarSidebar } from '@/assets/custom/icon-sidebar-sidebar'
 import { IconThemeDark } from '@/assets/custom/icon-theme-dark'
 import { IconThemeLight } from '@/assets/custom/icon-theme-light'
 import { IconThemeSystem } from '@/assets/custom/icon-theme-system'
@@ -47,7 +44,7 @@ export function ConfigDrawer() {
           aria-label={t('config.title')}
           className='rounded-full'
         >
-          <Settings aria-hidden='true' />
+          <GearSixIcon aria-hidden='true' />
         </Button>
       </SheetTrigger>
       <SheetContent className='flex flex-col'>
@@ -57,7 +54,6 @@ export function ConfigDrawer() {
         </SheetHeader>
         <div className='space-y-6 overflow-y-auto px-4'>
           <ThemeConfig />
-          <SidebarConfig />
           <LayoutConfig />
         </div>
         <SheetFooter className='gap-2'>
@@ -84,7 +80,7 @@ function SectionTitle({
   title: string
   showReset?: boolean
   onReset?: () => void
-  /** Shown on the small per-section reset (RotateCcw) for accessibility and tests. */
+  /** Shown on the small per-section reset arrow for accessibility and tests. */
   resetAriaLabel?: string
   className?: string
 }) {
@@ -105,7 +101,7 @@ function SectionTitle({
           onClick={onReset}
           aria-label={resetAriaLabel}
         >
-          <RotateCcw className='size-3' />
+          <ArrowCounterClockwiseIcon className='size-3' />
         </Button>
       )}
     </div>
@@ -140,7 +136,7 @@ function RadioGroupItem({
         aria-hidden='false'
         aria-label={item.label}
       >
-        <CircleCheck
+        <CheckCircleIcon
           className={cn(
             'size-6 fill-primary stroke-white',
             'group-data-[state=unchecked]:hidden',
@@ -202,47 +198,6 @@ function ThemeConfig() {
           },
         ].map((item) => (
           <RadioGroupItem key={item.value} item={item} isTheme />
-        ))}
-      </Radio>
-    </div>
-  )
-}
-
-function SidebarConfig() {
-  const { t } = useI18n()
-  const { defaultVariant, variant, setVariant } = useLayout()
-  return (
-    <div className='max-md:hidden'>
-      <SectionTitle
-        title={t('config.sidebar')}
-        showReset={defaultVariant !== variant}
-        onReset={() => setVariant(defaultVariant)}
-        resetAriaLabel={t('config.reset')}
-      />
-      <Radio
-        value={variant}
-        onValueChange={setVariant}
-        className='grid w-full max-w-md grid-cols-3 gap-4'
-        aria-label={t('config.sidebar')}
-      >
-        {[
-          {
-            value: 'inset',
-            label: t('config.inset'),
-            icon: IconSidebarInset,
-          },
-          {
-            value: 'floating',
-            label: t('config.floating'),
-            icon: IconSidebarFloating,
-          },
-          {
-            value: 'sidebar',
-            label: t('config.standard'),
-            icon: IconSidebarSidebar,
-          },
-        ].map((item) => (
-          <RadioGroupItem key={item.value} item={item} />
         ))}
       </Radio>
     </div>

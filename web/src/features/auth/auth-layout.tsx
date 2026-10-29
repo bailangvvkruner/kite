@@ -15,8 +15,8 @@ type AuthLayoutProps = {
  * behind it. Everything a studio knows comes from an API that will not answer
  * until somebody has signed in.
  *
- * It is shadcn-admin's second sign-in page without its picture: the form
- * alone, in the middle of the page.
+ * It is the studio's own sky: a white sheet on the canvas the rail sits on,
+ * under the mark and its serif name.
  */
 export function AuthLayout({
   title,
@@ -27,22 +27,18 @@ export function AuthLayout({
   return (
     // Kite: min-h-svh rather than h-svh, so a form taller than a landscape
     // phone scrolls instead of losing its top.
-    <div className='relative container grid min-h-svh flex-col items-center justify-center'>
-      <div className='lg:p-8'>
-        <div className='mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:w-120 sm:p-8'>
-          <div className='mb-4 flex items-center justify-center'>
-            <KiteMark className='me-2 size-6' />
-            <h1 className='text-xl font-medium'>Kite</h1>
-          </div>
+    <div className='flex min-h-svh flex-col items-center justify-center bg-canvas px-4 py-10'>
+      <div className='w-full max-w-[26rem] rounded-2xl bg-card p-7 pb-5 text-card-foreground shadow-[0_1px_2px_rgb(23_32_54/0.04),0_0_0_1px_rgb(23_32_54/0.04),0_12px_32px_rgb(23_32_54/0.06)] sm:p-8 sm:pb-6 dark:shadow-[0_0_0_1px_rgb(255_255_255/0.06)]'>
+        <div className='flex items-center gap-2'>
+          <KiteMark tight className='h-[18px] w-auto' />
+          <span className='font-serif text-xl leading-none font-bold'>Kite</span>
         </div>
-        <div className='mx-auto flex w-full max-w-sm flex-col justify-center space-y-2'>
-          <div className='flex flex-col space-y-2 text-start'>
-            <h2 className='text-lg font-semibold tracking-tight'>{title}</h2>
-            <p className='text-sm text-muted-foreground'>{description}</p>
-          </div>
-          {children}
-          <AuthFooter noSite={noSite} />
+        <div className='mt-6 mb-5 grid gap-1'>
+          <h1 className='text-lg font-semibold tracking-tight'>{title}</h1>
+          <p className='text-sm text-muted-foreground'>{description}</p>
         </div>
+        {children}
+        <AuthFooter noSite={noSite} />
       </div>
     </div>
   )
@@ -52,7 +48,7 @@ export function AuthLayout({
 function AuthFooter({ noSite }: { noSite?: boolean }) {
   const { t } = useI18n()
   return (
-    <div className='flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground'>
+    <div className='mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground'>
       {!noSite && (
         <>
           {/* The server sends the bare host to the site's home page. */}

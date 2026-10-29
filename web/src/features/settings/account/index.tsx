@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { ImageUp, Info, KeyRound, LogOut, MonitorSmartphone, ShieldAlert, Trash2, XCircle } from "lucide-react";
+import {
+  UploadSimpleIcon,
+  InfoIcon,
+  KeyIcon,
+  SignOutIcon,
+  DevicesIcon,
+  ShieldWarningIcon,
+  TrashIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -25,10 +34,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { UserAvatar } from "@/components/layout/account";
-import { Hint, NewPassword, newPasswordReady } from "@/components/new-password";
+import { NewPassword, newPasswordReady } from "@/components/new-password";
 import { PasswordInput } from "@/components/password-input";
 import { QueryError } from "@/components/query-error";
 import { SignOutDialog } from "@/components/sign-out-dialog";
+import { FormActions } from "@/components/form-actions";
 import { ContentSection } from "../components/content-section";
 import { Group, Row } from "../components/form-group";
 
@@ -43,6 +53,7 @@ export function AccountSettings() {
   const account = useAccountInfo();
   const { hash } = useLocation();
   const loaded = Boolean(account.data);
+  const profile = useProfileForm(account.data);
 
   // The menu's "set a password" lands here; the group it means is below the
   // profile, so it is brought into view once there is something to show.
@@ -51,10 +62,29 @@ export function AccountSettings() {
   }, [loaded, hash]);
 
   return (
-    <ContentSection title={t("settings.account")} desc={t("settings.accountNote")}>
+    <ContentSection
+      title={t("settings.account")}
+      desc={t("settings.accountNote")}
+      end={{ title: t("settings.endAccount"), note: t("settings.endAccountNote") }}
+      // The profile saves from the title row, as every settings page does;
+      // signing in has its own buttons, since a password is not a setting.
+      actions={
+        account.data && (
+          <FormActions
+            changes={profile.changes}
+            problems={profile.emailLeft && !profile.emailOK ? 1 : 0}
+            pending={profile.saving}
+            blocked={profile.locked && profile.nameLocked}
+            onRevert={profile.revert}
+            onSave={() => void profile.save()}
+            saveLabel={t("account.saveProfile")}
+          />
+        )
+      }
+    >
       {account.data ? (
-        <div className="grid gap-10">
-          <ProfileGroup account={account.data} />
+        <div>
+          <ProfileGroup account={account.data} form={profile} />
           {account.data.protected ? (
             <SignInGroup account={account.data} />
           ) : (
@@ -72,35 +102,39 @@ export function AccountSettings() {
   );
 }
 
-function ProfileGroup({ account }: { account: Account }) {
+type ProfileForm = ReturnType<typeof useProfileForm>;
+
+/**
+ * useProfileForm holds the name and email being edited, for the profile
+ * group to show and the title row to save.
+ */
+function useProfileForm(account: Account | undefined) {
   const { t } = useI18n();
   const update = useUpdateProfile();
   const settings = useSettings();
   const saveSettings = useSaveSettings();
-  const upload = useUploadAvatar();
-  const removeAvatar = useRemoveAvatar();
-  const picker = useRef<HTMLInputElement>(null);
 
   // The name is the site's author, so the site credits the person by it. A
   // name kept in the profile before is taken over from there.
   const author = settings.data?.site.author ?? "";
-  const stored = author || account.profile.name;
+  const storedEmail = account?.profile.email ?? "";
+  const stored = author || (account?.profile.name ?? "");
   const [name, setName] = useState(stored);
-  const [email, setEmail] = useState(account.profile.email);
+  const [email, setEmail] = useState(storedEmail);
   // What was stored is what the server trimmed, so the form follows it.
   useEffect(() => setName(stored), [stored]);
-  useEffect(() => setEmail(account.profile.email), [account.profile.email]);
+  useEffect(() => setEmail(storedEmail), [storedEmail]);
 
-  const locked = !account.profile_editable;
+  const locked = !account?.profile_editable;
   const nameLocked = !settings.data?.writable.includes("site.author");
-  const dirty = name.trim() !== stored || email.trim() !== account.profile.email;
+  const changes = Number(name.trim() !== stored) + Number(email.trim() !== storedEmail);
   const saving = update.isPending || saveSettings.isPending;
   // Judged once the field is left, not while the address is half typed.
   const [emailLeft, setEmailLeft] = useState(false);
   const emailOK = email.trim() === "" || looksLikeEmail(email.trim());
 
-  const save = async (e: FormEvent) => {
-    e.preventDefault();
+  const save = async () => {
+    if (!changes || !emailOK || saving) return;
     try {
       if (name.trim() !== author && settings.data) {
         await saveSettings.mutateAsync({
@@ -108,13 +142,48 @@ function ProfileGroup({ account }: { account: Account }) {
           revision: settings.data.revision,
         });
       }
-      if (email.trim() !== account.profile.email || account.profile.name) {
+      if (email.trim() !== storedEmail || account?.profile.name) {
         await update.mutateAsync({ name: "", email });
       }
       toast.success(t("account.profileSaved"));
     } catch {
       // Each save says what went wrong under the form.
     }
+  };
+  const revert = () => {
+    setName(stored);
+    setEmail(storedEmail);
+    setEmailLeft(false);
+  };
+
+  return {
+    name,
+    setName,
+    email,
+    setEmail,
+    emailLeft,
+    setEmailLeft,
+    emailOK,
+    locked,
+    nameLocked,
+    changes,
+    saving,
+    error: saveSettings.error ?? update.error,
+    save,
+    revert,
+  };
+}
+
+function ProfileGroup({ account, form }: { account: Account; form: ProfileForm }) {
+  const { t } = useI18n();
+  const upload = useUploadAvatar();
+  const removeAvatar = useRemoveAvatar();
+  const picker = useRef<HTMLInputElement>(null);
+  const { name, setName, email, setEmail, emailLeft, setEmailLeft, emailOK, locked, nameLocked } = form;
+
+  const save = (e: FormEvent) => {
+    e.preventDefault();
+    void form.save();
   };
 
   const choose = async (file: File | undefined) => {
@@ -130,7 +199,7 @@ function ProfileGroup({ account }: { account: Account }) {
   };
 
   return (
-    <Group title={t("account.groupProfile")}>
+    <Group id="account-profile" title={t("account.groupProfile")} changed={form.changes > 0}>
       <div className="flex items-center gap-4">
         <UserAvatar large />
         <div className="grid gap-2">
@@ -142,7 +211,7 @@ function ProfileGroup({ account }: { account: Account }) {
               disabled={locked || upload.isPending}
               onClick={() => picker.current?.click()}
             >
-              {upload.isPending ? <Spinner /> : <ImageUp />}
+              {upload.isPending ? <Spinner /> : <UploadSimpleIcon />}
               {t(account.avatar ? "account.changeAvatar" : "account.uploadAvatar")}
             </Button>
             {account.avatar && (
@@ -153,7 +222,7 @@ function ProfileGroup({ account }: { account: Account }) {
                 disabled={locked || removeAvatar.isPending}
                 onClick={() => removeAvatar.mutate()}
               >
-                <Trash2 />
+                <TrashIcon />
                 {t("account.removeAvatar")}
               </Button>
             )}
@@ -176,8 +245,8 @@ function ProfileGroup({ account }: { account: Account }) {
 
       {/* The server says what is wrong with an address, in the page rather
           than in the browser's own bubble. */}
-      <form onSubmit={save} noValidate className="grid gap-6">
-        <Row id="profile-name" label="account.name" help="account.nameHelp">
+      <form onSubmit={save} noValidate className={formGrid}>
+        <Row id="profile-name" label="account.name" help="account.nameHelp" half>
           <Input
             id="profile-name"
             value={name}
@@ -187,8 +256,14 @@ function ProfileGroup({ account }: { account: Account }) {
             onChange={(e) => setName(e.target.value)}
           />
         </Row>
-        <div className="grid gap-2">
-          <Label htmlFor="profile-email">{t("account.email")}</Label>
+        <Row
+          id="profile-email"
+          label="account.email"
+          help="account.emailHelp"
+          half
+          optional
+          problem={emailLeft && !emailOK ? t("account.emailInvalid") : null}
+        >
           <Input
             id="profile-email"
             type="email"
@@ -199,19 +274,10 @@ function ProfileGroup({ account }: { account: Account }) {
             onChange={(e) => setEmail(e.target.value)}
             onBlur={() => setEmailLeft(true)}
           />
-          {emailLeft && !emailOK ? (
-            <Hint tone="wrong">{t("account.emailInvalid")}</Hint>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("account.emailHelp")}</p>
-          )}
-        </div>
-        <Problem error={saveSettings.error ?? update.error} />
-        <div>
-          <Button type="submit" disabled={(locked && nameLocked) || !dirty || !emailOK || saving}>
-            {saving && <Spinner />}
-            {t("account.saveProfile")}
-          </Button>
-        </div>
+        </Row>
+        <Problem error={form.error} />
+        {/* Enter in either field saves; the button that shows is in the title row. */}
+        <button type="submit" tabIndex={-1} aria-hidden className="sr-only" />
       </form>
     </Group>
   );
@@ -236,10 +302,10 @@ function SetPasswordGroup({ account }: { account: Account }) {
   };
 
   return (
-    <Group id="sign-in" title={t("account.groupSignIn")}>
-      <Note icon={<ShieldAlert />}>{t("account.openNote")}</Note>
+    <Group id="sign-in" title={t("account.groupSignIn")} changed={password !== ""}>
+      <Note icon={<ShieldWarningIcon />}>{t("account.openNote")}</Note>
       {account.editable ? (
-        <form onSubmit={submit} className="grid gap-6">
+        <form onSubmit={submit} className={formGrid}>
           <Row id="user" label="account.user" help="account.userHelp">
             <Input
               id="user"
@@ -260,7 +326,7 @@ function SetPasswordGroup({ account }: { account: Account }) {
           <Problem error={set.error} />
           <div>
             <Button type="submit" disabled={!ready || set.isPending}>
-              {set.isPending ? <Spinner /> : <KeyRound />}
+              {set.isPending ? <Spinner /> : <KeyIcon />}
               {t("account.setPassword")}
             </Button>
           </div>
@@ -322,8 +388,8 @@ function SignInGroup({ account }: { account: Account }) {
   };
 
   return (
-    <Group id="sign-in" title={t("account.groupSignIn")}>
-      <form onSubmit={submit} className="grid gap-6">
+    <Group id="sign-in" title={t("account.groupSignIn")} changed={renamed || password !== ""}>
+      <form onSubmit={submit} className={formGrid}>
         <Row id="user" label="account.user" help="account.userHelp">
           <Input
             id="user"
@@ -375,9 +441,9 @@ function SessionsGroup({ account }: { account: Account }) {
   const fixed = account.source === "environment";
 
   return (
-    <Group title={t("account.groupSessions")}>
+    <Group id="account-sessions" title={t("account.groupSessions")}>
       <div className="flex items-start gap-3 rounded-md border p-4">
-        <MonitorSmartphone className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+        <DevicesIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
         <div className="grid gap-1 text-sm">
           <p>{t("account.sessionUntil", { time: date(session.expires_at, "long") })}</p>
           <p className="text-muted-foreground">
@@ -391,7 +457,7 @@ function SessionsGroup({ account }: { account: Account }) {
             {t("account.endOthers")}
           </Button>
           <Button variant="outline" onClick={() => setLeaving(true)}>
-            <LogOut />
+            <SignOutIcon />
             {t("session.signOut")}
           </Button>
         </div>
@@ -440,11 +506,11 @@ function RemoveGroup() {
   };
 
   return (
-    <Group title={t("account.groupRemove")}>
+    <Group id="account-remove" title={t("account.groupRemove")}>
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-destructive/30 p-4">
         <p className="max-w-md text-sm text-muted-foreground">{t("account.removeNote")}</p>
         <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)}>
-          <Trash2 />
+          <TrashIcon />
           {t("account.remove")}
         </Button>
       </div>
@@ -490,11 +556,14 @@ function RemoveGroup() {
   );
 }
 
+// A form inside a group lays its rows out as the group does.
+const formGrid = "grid gap-x-5 gap-y-6 @xl/form:grid-cols-2 [&>*:not([data-half])]:col-span-full";
+
 /** Note is a line the form has to say before anything can be typed. */
 function Note({ icon, children }: { icon?: ReactNode; children: ReactNode }) {
   return (
     <Alert>
-      {icon ?? <Info />}
+      {icon ?? <InfoIcon />}
       <AlertDescription>{children}</AlertDescription>
     </Alert>
   );
@@ -531,7 +600,7 @@ function Problem({ error }: { error: unknown }) {
 
   return (
     <Alert variant="destructive">
-      <XCircle />
+      <XCircleIcon />
       <AlertTitle>{said.title}</AlertTitle>
       {said.detail && <AlertDescription>{said.detail}</AlertDescription>}
     </Alert>

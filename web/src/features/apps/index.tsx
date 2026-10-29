@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
-import { Palette, Puzzle, RefreshCw, Search, TriangleAlert, WifiOff } from "lucide-react";
+import {
+  PaletteIcon,
+  PuzzlePieceIcon,
+  ArrowClockwiseIcon,
+  MagnifyingGlassIcon,
+  WarningIcon,
+  WifiSlashIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -14,7 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/empty-state";
+import { FilterChips } from "@/components/filter-chips";
 import { AppHeader } from "@/components/layout/app-header";
 import { Main } from "@/components/layout/main";
 import { PageTitle } from "@/components/layout/page-title";
@@ -93,7 +101,7 @@ export function Apps() {
       <Main className="flex flex-1 flex-col gap-4 sm:gap-6">
         <PageTitle title={t("nav.apps")} description={t("apps.note")}>
           <Button variant="outline" disabled={refresh.isPending} onClick={fetchAgain}>
-            {refresh.isPending ? <Spinner /> : <RefreshCw />}
+            {refresh.isPending ? <Spinner /> : <ArrowClockwiseIcon />}
             {t("apps.refresh")}
           </Button>
         </PageTitle>
@@ -101,26 +109,21 @@ export function Apps() {
         <PublishBar className="mb-0 lg:mb-0" />
         {apps.data?.offline && (
           <Alert>
-            <WifiOff />
+            <WifiSlashIcon />
             <AlertDescription>{t("apps.offline", { when: relative(apps.data.fetched) })}</AlertDescription>
           </Alert>
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          <Tabs value={kind} onValueChange={(value) => set({ kind: value as AppKind, id: undefined })}>
-            <TabsList>
-              <TabsTrigger value="theme">
-                <Palette />
-                {t("apps.themes")}
-                {apps.data && <span className="text-muted-foreground tabular-nums">{count("theme")}</span>}
-              </TabsTrigger>
-              <TabsTrigger value="plugin">
-                <Puzzle />
-                {t("apps.plugins")}
-                {apps.data && <span className="text-muted-foreground tabular-nums">{count("plugin")}</span>}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <FilterChips<AppKind>
+            label={t("nav.apps")}
+            value={kind}
+            onChange={(value) => set({ kind: value, id: undefined })}
+            options={[
+              { value: "theme", label: t("apps.themes"), icon: PaletteIcon, count: apps.data ? count("theme") : undefined },
+              { value: "plugin", label: t("apps.plugins"), icon: PuzzlePieceIcon, count: apps.data ? count("plugin") : undefined },
+            ]}
+          />
           <SearchBox value={search.q ?? ""} onChange={(q) => set({ q: q || undefined })} />
           <Select
             value={search.source ?? "all"}
@@ -146,9 +149,13 @@ export function Apps() {
             ))}
           </div>
         ) : shown.length === 0 ? (
-          <p className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
-            {t(kind === "theme" ? "apps.noThemes" : "apps.noPlugins")}
-          </p>
+          <EmptyState icon={kind === "theme" ? PaletteIcon : PuzzlePieceIcon} title={t(kind === "theme" ? "apps.noThemes" : "apps.noPlugins")}>
+            {(search.q || search.source) && (
+              <Button variant="outline" onClick={() => set({ q: undefined, source: undefined })}>
+                {t("apps.clearFilters")}
+              </Button>
+            )}
+          </EmptyState>
         ) : (
           <div className={grid(kind)}>
             {shown.map((app) => (
@@ -197,7 +204,7 @@ function SearchBox({ value, onChange }: { value: string; onChange: (q: string) =
   }, [query, value, onChange]);
   return (
     <div className="relative w-full sm:w-64">
-      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+      <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         type="search"
         value={query}
@@ -224,7 +231,12 @@ function AppCard({
   const { t } = useI18n();
   const theme = app.kind === "theme";
   return (
-    <article className={cn("flex flex-col overflow-hidden rounded-xl border bg-card", app.update && "border-primary/40")}>
+    <article
+      className={cn(
+        "flex flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-foreground/15",
+        app.update && "border-primary/40",
+      )}
+    >
       {theme && (
         <button type="button" onClick={onOpen} className="outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
           <AppScreenshot app={app} className="aspect-[16/10] border-b" />
@@ -246,7 +258,7 @@ function AppCard({
           )}
           {app.problem ? (
             <p className="flex gap-2 text-sm text-muted-foreground">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <WarningIcon className="mt-0.5 size-4 shrink-0" />
               <span className="line-clamp-2">{t("apps.unfit")}</span>
             </p>
           ) : (

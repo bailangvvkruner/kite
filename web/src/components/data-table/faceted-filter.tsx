@@ -1,10 +1,8 @@
 import * as React from 'react'
-import { Check, PlusCircle } from 'lucide-react'
+import { CaretDownIcon, CheckIcon } from '@phosphor-icons/react'
 import { type Column } from '@tanstack/react-table'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Command,
   CommandEmpty,
@@ -19,7 +17,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Separator } from '@/components/ui/separator'
 
 type DataTableFacetedFilterProps<TData, TValue> = {
   column?: Column<TData, TValue>
@@ -47,43 +44,30 @@ export function DataTableFacetedFilter<TData, TValue>({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='outline' size='sm' className='h-8 border-dashed'>
-          <PlusCircle className='size-4' />
-          {title}
-          {selectedValues?.size > 0 && (
-            <>
-              <Separator orientation='vertical' className='mx-2 h-4' />
-              <Badge
-                variant='secondary'
-                className='rounded-sm px-1 font-normal lg:hidden'
-              >
-                {selectedValues.size}
-              </Badge>
-              <div className='hidden space-x-1 lg:flex'>
-                {selectedValues.size > 2 ? (
-                  <Badge
-                    variant='secondary'
-                    className='rounded-sm px-1 font-normal'
-                  >
-                    {t('list.selected', { count: selectedValues.size })}
-                  </Badge>
-                ) : (
-                  options
-                    .filter((option) => selectedValues.has(option.value))
-                    .map((option) => (
-                      <Badge
-                        variant='secondary'
-                        key={option.value}
-                        className='rounded-sm px-1 font-normal'
-                      >
-                        {option.label}
-                      </Badge>
-                    ))
-                )}
-              </div>
-            </>
+        {/* Kite: drawn as the list's chips, a well at rest and dark once
+            it narrows the list, naming what it narrows to. */}
+        <button
+          type='button'
+          className={cn(
+            'inline-flex h-8 max-w-64 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
+            selectedValues.size > 0
+              ? 'bg-foreground font-medium text-background'
+              : 'bg-muted text-foreground/80 hover:bg-accent'
           )}
-        </Button>
+        >
+          {title}
+          {selectedValues.size > 0 && (
+            <span className='min-w-0 truncate font-normal opacity-80'>
+              {selectedValues.size > 2
+                ? t('list.selected', { count: selectedValues.size })
+                : options
+                    .filter((option) => selectedValues.has(option.value))
+                    .map((option) => option.label)
+                    .join(t('form.listJoin'))}
+            </span>
+          )}
+          <CaretDownIcon className='size-3.5 shrink-0 opacity-60' />
+        </button>
       </PopoverTrigger>
       <PopoverContent className='w-50 p-0' align='start'>
         <Command>
@@ -116,7 +100,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                           : 'opacity-50 [&_svg]:invisible'
                       )}
                     >
-                      <Check className={cn('h-4 w-4 text-background')} />
+                      <CheckIcon className={cn('h-4 w-4 text-background')} />
                     </div>
                     {option.icon && (
                       <option.icon

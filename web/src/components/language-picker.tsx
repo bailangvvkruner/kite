@@ -1,4 +1,4 @@
-import { Languages } from 'lucide-react'
+import { TranslateIcon } from '@phosphor-icons/react'
 import { locales, useI18n, type Locale } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,7 +23,7 @@ export function LanguagePicker() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant='ghost' size='sm' title={t('nav.language')}>
-          <Languages />
+          <TranslateIcon />
           {locales[locale].label}
         </Button>
       </DropdownMenuTrigger>

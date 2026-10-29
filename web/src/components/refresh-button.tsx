@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { RefreshCw } from 'lucide-react'
+import { ArrowClockwiseIcon } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { ApiError } from '@/api/client'
 import { useI18n, useProblem } from '@/i18n'
@@ -36,7 +36,7 @@ export function RefreshButton() {
 
   return (
     <Button variant='outline' aria-busy={refreshing} onClick={() => void refresh()}>
-      <RefreshCw className={cn(refreshing && 'animate-spin')} />
+      <ArrowClockwiseIcon className={cn(refreshing && 'animate-spin')} />
       {t('dashboard.refresh')}
     </Button>
   )

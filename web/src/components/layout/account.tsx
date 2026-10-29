@@ -1,4 +1,3 @@
-import { UserRound } from 'lucide-react'
 import { useI18n } from '@/i18n'
 import { useAccountInfo } from '@/hooks/useAccount'
 import { useSession } from '@/hooks/useSession'
@@ -6,6 +5,7 @@ import { useSettings } from '@/hooks/useSettings'
 import { tint } from '@/lib/tint'
 import { cn, getDisplayNameInitials } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { KiteMark } from '@/components/KiteMark'
 
 /**
  * useAccount says who the studio is being used by: their name, which is the
@@ -28,10 +28,11 @@ export function useAccount() {
 
   return {
     user,
-    name: shown || (loading ? '' : t('session.role')),
-    email: profile?.email || undefined,
+    name: shown || (loading ? '' : t('session.unnamed')),
+    // The line under the name: the email, else that nobody signs in here.
+    detail: profile?.email || (session.data?.required === false ? t('session.localMode') : undefined),
     avatar: info.data?.avatar,
-    // Initials only from a name somebody chose; nobody named gets a figure.
+    // Initials only from a name somebody chose; nobody named gets the kite.
     initials: shown ? getDisplayNameInitials(shown) : undefined,
     tint: shown ? tint(shown) : undefined,
     // Only a server that can write the account offers to set a password.
@@ -39,7 +40,10 @@ export function useAccount() {
   }
 }
 
-/** UserAvatar is the picture, or initials in the name's own color. */
+/**
+ * UserAvatar is the picture, or initials in the name's own color, or the
+ * white kite on the brand blue while nobody is named.
+ */
 export function UserAvatar({ className, large }: { className?: string; large?: boolean }) {
   const account = useAccount()
 
@@ -52,12 +56,13 @@ export function UserAvatar({ className, large }: { className?: string; large?: b
         className={cn(
           'rounded-full font-medium',
           large ? 'text-xl' : 'text-xs',
-          account.tint
+          account.initials ? account.tint : 'bg-primary'
         )}
       >
         {account.initials ?? (
-          <UserRound
-            className={cn(large ? 'size-7' : 'size-4', 'text-muted-foreground')}
+          <KiteMark
+            tight
+            className={cn(large ? 'h-7' : 'h-3.5', 'w-auto text-white! dark:text-white!')}
           />
         )}
       </AvatarFallback>

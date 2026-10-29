@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-import { appendTo, bodyOf, expect, test } from "./fixtures";
+import { appendTo, bodyOf, expect, saveOnly, test } from "./fixtures";
 
 test("a request refused for want of a session goes to sign in, and back with the work", async ({ page, site }) => {
   const post = site.posts.ready;
@@ -33,7 +33,7 @@ test("a request refused for want of a session goes to sign in, and back with the
   await expect(page).toHaveURL(new RegExp(`/admin/content/post/${post.id}$`));
   await expect(page.getByText(/^Brought back what you wrote/)).toBeVisible();
   await expect(bodyOf(page)).toHaveText("First words. Kept through signing in.");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await saveOnly(page);
   await expect(page.getByText(/^Saved at /)).toBeVisible();
   expect(await site.read(post.file)).toContain("First words. Kept through signing in.");
 });

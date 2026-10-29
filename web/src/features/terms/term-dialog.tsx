@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Check } from "lucide-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -201,7 +201,7 @@ export function TermDialog({
                 >
                   <span className="min-w-0 truncate">{other.term}</span>
                   <span className="ms-auto text-xs text-muted-foreground tabular-nums">{other.count}</span>
-                  <Check className={value === other.term ? "text-primary" : "invisible"} />
+                  <CheckIcon className={value === other.term ? "text-primary" : "invisible"} />
                 </CommandItem>
               ))}
             </CommandList>

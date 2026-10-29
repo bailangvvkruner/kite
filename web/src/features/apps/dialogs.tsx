@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ExternalLink, TriangleAlert } from "lucide-react";
+import { ArrowSquareOutIcon, WarningIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -65,7 +65,7 @@ export function InstallDialog({ app, onClose }: { app: AppInfo | null; onClose: 
           {app && !app.official && <p>{t("apps.communityNote")}</p>}
           {app?.other && (
             <p className="flex gap-2 text-destructive">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <WarningIcon className="mt-0.5 size-4 shrink-0" />
               <span>{t(theme ? "apps.replacesTheme" : "apps.replacesPlugin", { id: app.id })}</span>
             </p>
           )}
@@ -143,7 +143,7 @@ export function UpdateDialog({ app, onClose }: { app: AppInfo | null; onClose: (
                   {" "}
                   <a href={p.notes} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
                     {t("apps.notes")}
-                    <ExternalLink className="size-3" />
+                    <ArrowSquareOutIcon className="size-3" />
                   </a>
                 </>
               )}

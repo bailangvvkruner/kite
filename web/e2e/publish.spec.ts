@@ -7,7 +7,7 @@ test("a publish a git hook refuses says why, and goes out without the hooks", as
 
   await page.goto(`/admin/content/post/${post.id}`);
   await appendTo(page, "First words.", " Second words.");
-  await page.getByRole("button", { name: "Update" }).click();
+  await page.getByRole("button", { name: "Publish changes" }).click();
 
   const refusal = page.getByRole("dialog").filter({ hasText: "A git hook in this repository refused the commit." });
   await expect(refusal).toContainText("pre-commit hook refused: e2e: no commits today");

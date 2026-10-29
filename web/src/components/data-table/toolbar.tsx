@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
 import { type Table } from '@tanstack/react-table'
 import { useI18n } from '@/i18n'
 import { Button } from '@/components/ui/button'
@@ -39,25 +39,25 @@ export function DataTableToolbar<TData>({
   return (
     <div className='flex items-center justify-between'>
       <div className='flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2'>
-        {searchKey ? (
+        <div className='relative w-full sm:w-64'>
+          <MagnifyingGlassIcon className='pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground' />
           <Input
+            type='search'
             placeholder={searchPlaceholder ?? t('list.filter')}
+            aria-label={searchPlaceholder ?? t('list.filter')}
             value={
-              (table.getColumn(searchKey)?.getFilterValue() as string) ?? ''
+              searchKey
+                ? ((table.getColumn(searchKey)?.getFilterValue() as string) ?? '')
+                : (table.getState().globalFilter ?? '')
             }
             onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
+              searchKey
+                ? table.getColumn(searchKey)?.setFilterValue(event.target.value)
+                : table.setGlobalFilter(event.target.value)
             }
-            className='h-8 w-37.5 lg:w-62.5'
+            className='h-8 ps-8'
           />
-        ) : (
-          <Input
-            placeholder={searchPlaceholder ?? t('list.filter')}
-            value={table.getState().globalFilter ?? ''}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-            className='h-8 w-37.5 lg:w-62.5'
-          />
-        )}
+        </div>
         <div className='flex gap-x-2'>
           {filters.map((filter) => {
             const column = table.getColumn(filter.columnId)
@@ -83,7 +83,7 @@ export function DataTableToolbar<TData>({
             className='h-8 px-2 lg:px-3'
           >
             {t('list.reset')}
-            <X className='ms-2 h-4 w-4' />
+            <XIcon className='ms-2 h-4 w-4' />
           </Button>
         )}
       </div>

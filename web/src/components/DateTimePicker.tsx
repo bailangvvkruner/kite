@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarIcon } from "lucide-react";
+import { CalendarBlankIcon } from "@phosphor-icons/react";
 import { enUS, zhCN } from "react-day-picker/locale";
 
 import { useI18n } from "@/i18n";
+import { fieldTrigger } from "@/lib/field";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -53,14 +54,10 @@ export function DateTimePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          id={id}
-          variant="outline"
-          className={cn("w-full justify-start font-normal", !at && "text-muted-foreground")}
-        >
-          <CalendarIcon />
+        <button id={id} type="button" className={cn(fieldTrigger, !at && "text-muted-foreground/70")}>
+          <CalendarBlankIcon className="text-muted-foreground" />
           {at ? date(value, "long") : placeholder}
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="end">
         <div className="flex">

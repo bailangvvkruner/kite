@@ -54,6 +54,20 @@
   scrollbar-width: none; /* Firefox */
 }
 
+/* Kite: the surface every field is drawn on. Borders and the inset shadow
+   only; size, radius and states are the field's own. The shadow is composed
+   the way Tailwind's are, so a focus ring adds to it rather than replacing it. */
+@utility field-surface {
+  border-width: 1px;
+  border-color: var(--input);
+  border-bottom-color: var(--input-edge);
+  background-color: var(--background);
+  --tw-inset-shadow: inset 0 1px 2px var(--field-inset);
+  box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow, 0 0 #0000), var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000);
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 150ms;
+}
+
 @utility faded-bottom {
   @apply after:pointer-events-none after:absolute after:inset-s-0 after:bottom-0 after:hidden after:h-32 after:w-full after:rounded-b-2xl after:bg-[linear-gradient(180deg,transparent_10%,var(--background)_70%)] md:after:block;
 }
@@ -219,5 +233,27 @@
 @media (prefers-reduced-motion: reduce) {
   .kite-found {
     animation-duration: 0.01s;
+  }
+}
+
+/* A picture still on its way: a band of light drifts across its panel. */
+.kite-shimmer {
+  background: linear-gradient(
+      100deg,
+      transparent 30%,
+      color-mix(in oklab, var(--primary) 9%, transparent) 50%,
+      transparent 70%
+    )
+    0 0 / 200% 100%;
+  animation: kite-shimmer 1.4s linear infinite;
+}
+@keyframes kite-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kite-shimmer {
+    animation: none;
   }
 }

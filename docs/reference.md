@@ -1055,6 +1055,17 @@ itself. Run `kite wrapper` in it, then change the workflow's build step from
 `kite build` to `sh ./kitew build` and remove the steps that install Go and
 Kite.
 
+### Newer releases of Kite
+
+A released Kite running `kite serve` or `kite run` asks GitHub at most once a
+day whether a newer release is out, and keeps the answer in the user's cache
+(`kite/latest.json`). When one is, the server says so as it starts and in its
+log, and the studio says so once in each browser and keeps saying so under
+**System → Deploy** until the server runs it. It only tells: replacing the
+binary, or pulling the new image in a container, and moving the pin are yours
+to do. A build from source never asks, and `KITE_NO_UPDATE_CHECK=1` turns the
+check off.
+
 ### Pinging after a deploy
 
 An update service learns that a blog has changed from a ping, the XML-RPC

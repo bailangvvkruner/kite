@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpIcon, CaretUpDownIcon, EyeSlashIcon } from '@phosphor-icons/react'
 import { type Column } from '@tanstack/react-table'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
@@ -38,28 +38,28 @@ export function DataTableColumnHeader<TData, TValue>({
           >
             <span>{title}</span>
             {column.getIsSorted() === 'desc' ? (
-              <ArrowDown className='ms-2 h-4 w-4' />
+              <ArrowDownIcon className='ms-2 h-4 w-4' />
             ) : column.getIsSorted() === 'asc' ? (
-              <ArrowUp className='ms-2 h-4 w-4' />
+              <ArrowUpIcon className='ms-2 h-4 w-4' />
             ) : (
-              <ChevronsUpDown className='ms-2 h-4 w-4' />
+              <CaretUpDownIcon className='ms-2 h-4 w-4' />
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='start'>
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-            <ArrowUp className='size-3.5 text-muted-foreground/70' />
+            <ArrowUpIcon className='size-3.5 text-muted-foreground/70' />
             {t('list.sortAsc')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-            <ArrowDown className='size-3.5 text-muted-foreground/70' />
+            <ArrowDownIcon className='size-3.5 text-muted-foreground/70' />
             {t('list.sortDesc')}
           </DropdownMenuItem>
           {column.getCanHide() && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
-                <EyeOff className='size-3.5 text-muted-foreground/70' />
+                <EyeSlashIcon className='size-3.5 text-muted-foreground/70' />
                 {t('list.hideColumn')}
               </DropdownMenuItem>
             </>

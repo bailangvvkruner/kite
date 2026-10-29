@@ -1,14 +1,16 @@
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  Code,
-  Cpu,
-  ExternalLink,
-  Globe,
-  Settings2,
-  TriangleAlert,
-  Upload,
-} from "lucide-react";
+  CodeIcon,
+  CpuIcon,
+  ArrowSquareOutIcon,
+  GlobeIcon,
+  PuzzlePieceIcon,
+  GearIcon,
+  StorefrontIcon,
+  WarningIcon,
+  UploadSimpleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
@@ -30,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { EmptyState } from "@/components/empty-state";
 import { RemoveButton } from "@/components/remove-button";
 import { AppHeader } from "@/components/layout/app-header";
 import { Main } from "@/components/layout/main";
@@ -57,9 +60,9 @@ export function Plugins() {
       <AppHeader />
       <Main className="flex flex-1 flex-col gap-4 sm:gap-6">
         <PageTitle title={t("nav.plugins")} description={t("plugins.note")}>
-          {writable && (
+          {writable && (plugins.data?.length ?? 0) > 0 && (
             <Button variant="outline" disabled={upload.busy} onClick={upload.choose}>
-              {upload.busy ? <Spinner /> : <Upload />}
+              {upload.busy ? <Spinner /> : <UploadSimpleIcon />}
               {t("plugins.upload")}
             </Button>
           )}
@@ -74,12 +77,33 @@ export function Plugins() {
             <Skeleton className="h-44 rounded-xl" />
             <Skeleton className="h-44 rounded-xl" />
           </div>
+        ) : plugins.data.length === 0 ? (
+          // None yet: the app center is where most come from, an upload the other way.
+          <EmptyState
+            icon={PuzzlePieceIcon}
+            title={t("plugins.none")}
+            note={t("plugins.noneNote")}
+            onDrop={writable ? (file) => void upload.send(file) : undefined}
+          >
+            <Button asChild>
+              <Link to="/apps" search={{ kind: "plugin" }}>
+                <StorefrontIcon />
+                {t("plugins.browse")}
+              </Link>
+            </Button>
+            {writable && (
+              <Button variant="outline" disabled={upload.busy} onClick={upload.choose}>
+                {upload.busy ? <Spinner /> : <UploadSimpleIcon />}
+                {upload.sending ? t("plugins.installing", { name: upload.sending }) : t("plugins.upload")}
+              </Button>
+            )}
+          </EmptyState>
         ) : (
           <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(20rem,1fr))]">
             {plugins.data.map((plugin) => (
               <PluginCard key={plugin.id} plugin={plugin} onRemove={() => setRemoving(plugin)} />
             ))}
-            {writable && <UploadTile upload={upload} empty={plugins.data.length === 0} />}
+            {writable && <UploadTile upload={upload} />}
           </div>
         )}
 
@@ -143,7 +167,7 @@ function PluginCard({ plugin, onRemove }: { plugin: PluginInfo; onRemove: () => 
           )}
           {plugin.problem ? (
             <p className="flex gap-2 rounded-md bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <WarningIcon className="mt-0.5 size-4 shrink-0" />
               <span className="min-w-0 break-words">{plugin.problem}</span>
             </p>
           ) : (
@@ -153,20 +177,20 @@ function PluginCard({ plugin, onRemove }: { plugin: PluginInfo; onRemove: () => 
             <UpdateBadge kind="plugin" name={plugin.id} />
             {plugin.injects && (
               <Badge variant="secondary" className="font-normal">
-                <Code />
+                <CodeIcon />
                 {t("plugins.injects")}
               </Badge>
             )}
             {(plugin.hooks?.length ?? 0) > 0 && (
               <Badge variant="secondary" className="font-normal">
-                <Cpu />
+                <CpuIcon />
                 {t("plugins.hooks")}
               </Badge>
             )}
           </div>
           {(plugin.hosts?.length ?? 0) > 0 && (
             <p className="flex gap-1.5 text-xs text-muted-foreground">
-              <Globe className="mt-px size-3.5 shrink-0" />
+              <GlobeIcon className="mt-px size-3.5 shrink-0" />
               <span>{t("plugins.hosts", { hosts: plugin.hosts!.join(", ") })}</span>
             </p>
           )}
@@ -181,14 +205,14 @@ function PluginCard({ plugin, onRemove }: { plugin: PluginInfo; onRemove: () => 
       <div className="flex items-center gap-2 border-t px-4 py-3">
         <Button variant="outline" size="sm" asChild>
           <Link to="/plugins/$id" params={{ id: plugin.id }}>
-            <Settings2 />
+            <GearIcon />
             {t("plugins.settings")}
           </Link>
         </Button>
         {plugin.homepage && (
           <Button variant="ghost" size="sm" asChild>
             <a href={plugin.homepage} target="_blank" rel="noreferrer">
-              <ExternalLink />
+              <ArrowSquareOutIcon />
               {t("plugins.homepage")}
             </a>
           </Button>
@@ -206,7 +230,7 @@ function PluginCard({ plugin, onRemove }: { plugin: PluginInfo; onRemove: () => 
   );
 }
 
-type Upload = ReturnType<typeof useUpload>;
+type UploadSimpleIcon = ReturnType<typeof useUpload>;
 
 /**
  * useUpload installs the archive the author hands over, and asks before one
@@ -259,7 +283,7 @@ function useUpload() {
   };
 }
 
-function UploadTile({ upload, empty }: { upload: Upload; empty: boolean }) {
+function UploadTile({ upload }: { upload: UploadSimpleIcon }) {
   const { t } = useI18n();
   const [over, setOver] = useState(false);
   return (
@@ -283,15 +307,13 @@ function UploadTile({ upload, empty }: { upload: Upload; empty: boolean }) {
         over && "border-primary bg-primary/5",
       )}
     >
-      {upload.busy ? <Spinner className="size-6" /> : <Upload className="size-6" />}
+      {upload.busy ? <Spinner className="size-6" /> : <UploadSimpleIcon className="size-6" />}
       {upload.sending ? (
         <span className="text-sm text-foreground">{t("plugins.installing", { name: upload.sending })}</span>
       ) : (
         <>
-          <span className="text-sm font-medium text-foreground">
-            {empty ? t("plugins.none") : t("plugins.upload")}
-          </span>
-          <span className="max-w-64 text-xs">{empty ? t("plugins.noneNote") : t("plugins.dropZip")}</span>
+          <span className="text-sm font-medium text-foreground">{t("plugins.upload")}</span>
+          <span className="max-w-64 text-xs">{t("plugins.dropZip")}</span>
         </>
       )}
     </button>

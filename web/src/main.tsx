@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
 
 import { I18nProvider, useI18n } from "@/i18n";
 // Imported for its effect: it puts the theme on the document before a render.
@@ -26,7 +26,7 @@ function Pending() {
   const { t } = useI18n();
   return (
     <div className="flex min-h-svh items-center justify-center gap-2 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" />
+      <CircleNotchIcon className="size-4 animate-spin" />
       {t("session.checking")}
     </div>
   );

@@ -1,21 +1,20 @@
 import { useRef, useState, type DragEvent, type Ref, type ReactNode } from "react";
 import {
-  Check,
-  ChevronDown,
-  Circle,
-  CircleCheck,
-  Folder,
-  ImageOff,
-  ImagePlus,
-  LayoutTemplate,
-  Link2,
-  Pin,
-  Plus,
-  SlidersHorizontal,
-  Tag,
-  Tags,
-  X,
-} from "lucide-react";
+  CheckIcon,
+  CaretDownIcon,
+  CircleIcon,
+  CheckCircleIcon,
+  FolderIcon,
+  ImageBrokenIcon,
+  ImageIcon,
+  LayoutIcon,
+  LinkSimpleIcon,
+  PushPinIcon,
+  PlusIcon,
+  SlidersHorizontalIcon,
+  TagIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 
 import type { components, ContentType, Draft, Field } from "@/api/client";
 import { useI18n } from "@/i18n";
@@ -137,7 +136,7 @@ export function CoverField({
               disabled={busy}
               onClick={() => input.current?.click()}
             >
-              {busy ? <Spinner /> : <ImagePlus />}
+              {busy ? <Spinner /> : <ImageIcon />}
               {t("editor.replaceCover")}
             </Button>
             <Button
@@ -147,7 +146,7 @@ export function CoverField({
               aria-label={t("editor.removeCover")}
               onClick={() => onChange(null)}
             >
-              <X />
+              <XIcon />
             </Button>
           </div>
         </div>
@@ -159,7 +158,7 @@ export function CoverField({
   if (value === false) {
     return (
       <div className="mb-1 flex items-center gap-1 text-sm text-muted-foreground">
-        <ImageOff className="size-4 shrink-0" />
+        <ImageBrokenIcon className="size-4 shrink-0" />
         <span>{t("editor.coverSkipped")}</span>
         <Button variant="ghost" size="sm" className="h-7 px-2 font-normal" onClick={() => onChange(null)}>
           {t("editor.coverSkippedUndo")}
@@ -177,7 +176,7 @@ export function CoverField({
       {picker}
       <div className="-ms-2 flex items-center gap-1">
         <Button variant="ghost" size="sm" disabled={busy} className={quiet} onClick={() => input.current?.click()}>
-          {busy ? <Spinner /> : <ImagePlus />}
+          {busy ? <Spinner /> : <ImageIcon />}
           {t(busy ? "editor.coverUploading" : "editor.addCover")}
         </Button>
         <Button
@@ -188,7 +187,7 @@ export function CoverField({
           title={t("editor.skipCoverHint")}
           onClick={() => onChange(false)}
         >
-          <ImageOff />
+          <ImageBrokenIcon />
           {t("editor.skipCover")}
         </Button>
       </div>
@@ -240,11 +239,13 @@ export function SummaryField({
   );
 }
 
-// A property reads as a small outlined button; one not set yet is dashed,
-// and a switch that is on takes the accent.
+// A property reads as a small tinted chip, as terms do on the other pages;
+// one not set yet is a dashed outline, and a switch that is on takes the
+// accent.
 export const chip =
-  "h-7 max-w-full min-w-0 gap-1.5 px-2.5 text-[13px] font-normal shadow-none has-[>svg]:px-2.5 [&>svg]:text-muted-foreground";
-export const unset = "border-dashed text-muted-foreground";
+  "h-7 max-w-full min-w-0 gap-1.5 border-transparent bg-muted px-2.5 text-[13px] font-normal shadow-none hover:bg-accent has-[>svg]:px-2.5 dark:border-transparent dark:bg-muted dark:hover:bg-accent [&>svg]:text-muted-foreground";
+export const unset =
+  "border-dashed border-input bg-transparent text-muted-foreground hover:bg-muted/60 dark:border-input dark:bg-transparent";
 const on =
   "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary dark:bg-primary/15 [&>svg]:text-primary";
 
@@ -335,7 +336,7 @@ function SwitchChip({
   onChange: (value: boolean) => void;
 }) {
   const { t } = useI18n();
-  const Icon = field.key === "pinned" ? Pin : value ? CircleCheck : Circle;
+  const Icon = field.key === "pinned" ? PushPinIcon : value ? CheckCircleIcon : CircleIcon;
   return (
     <Button
       variant="outline"
@@ -344,7 +345,7 @@ function SwitchChip({
       className={cn(chip, value ? on : unset)}
       onClick={() => onChange(!value)}
     >
-      <Icon className={cn(value && field.key === "pinned" && "fill-current")} />
+      <Icon weight={value && field.key === "pinned" ? "fill" : "regular"} />
       {fieldLabel(field, t)}
     </Button>
   );
@@ -373,7 +374,7 @@ function FieldChip({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className={cn(chip, !set && unset)}>
-          <SlidersHorizontal />
+          <SlidersHorizontalIcon />
           <span className="truncate">{set && shown ? t("editor.fieldValue", { label, value: shown }) : label}</span>
         </Button>
       </PopoverTrigger>
@@ -422,7 +423,7 @@ function TermsChip({
   // the typed text as its value, so the filter keeps it in sight.
   const same = typed === "" ? undefined : listed.find((term) => termSlug(term) === termSlug(typed));
   const fresh = typed !== "" && same === undefined && termSlug(typed) !== "";
-  const Icon = taxonomy === "tags" ? Tags : taxonomy === "categories" ? Folder : Tag;
+  const Icon = taxonomy === "categories" ? FolderIcon : TagIcon;
 
   const toggle = (term: string) => {
     onChange(value.includes(term) ? value.filter((each) => each !== term) : [...value, term]);
@@ -461,7 +462,7 @@ function TermsChip({
             <CommandGroup>
               {fresh && (
                 <CommandItem value={`create:${typed}`} onSelect={() => toggle(typed)}>
-                  <Plus />
+                  <PlusIcon />
                   {t("editor.createTerm", { term: typed })}
                 </CommandItem>
               )}
@@ -471,7 +472,7 @@ function TermsChip({
                   value={term === same ? `create:${typed}` : term}
                   onSelect={() => toggle(term)}
                 >
-                  <Check className={cn("text-primary", !value.includes(term) && "invisible")} />
+                  <CheckIcon className={cn("text-primary", !value.includes(term) && "invisible")} />
                   <span className="flex-1 truncate">{term}</span>
                   <span className="text-xs text-muted-foreground tabular-nums">{count.get(termSlug(term))}</span>
                 </CommandItem>
@@ -500,7 +501,7 @@ function SlugChip({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className={chip}>
-          <Link2 />
+          <LinkSimpleIcon />
           <span className="sr-only">{t("editor.slug")}</span>
           <span className="truncate font-mono text-xs">
             {prefix}
@@ -551,11 +552,11 @@ function TemplateChip({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className={cn(chip, missing && "text-warning")}>
-          <LayoutTemplate />
+          <LayoutIcon />
           <span className="truncate">
             {name ? t("editor.templateNamed", { name }) : t("editor.templateDefault")}
           </span>
-          <ChevronDown />
+          <CaretDownIcon />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">

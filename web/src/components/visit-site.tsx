@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react'
+import { ArrowSquareOutIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { useSite } from '@/hooks/useContents'
 import { siteHome } from '@/lib/links'
@@ -11,16 +11,11 @@ export function VisitSite() {
   const label = t('nav.viewSite')
 
   return (
-    <Button
-      variant='ghost'
-      size='icon'
-      className='scale-95 rounded-full'
-      aria-label={label}
-      title={label}
-      asChild
-    >
+    // Named in words where there is room; a phone has only the icon.
+    <Button variant='outline' className='max-sm:size-9 max-sm:px-0' title={label} asChild>
       <a href={siteHome(site.data)} target='_blank' rel='noreferrer'>
-        <ExternalLink className='size-[1.2rem]' />
+        <ArrowSquareOutIcon />
+        <span className='max-sm:sr-only'>{label}</span>
       </a>
     </Button>
   )

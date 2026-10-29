@@ -1,8 +1,4 @@
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsLeftIcon,
-} from 'lucide-react'
+import { CaretLeftIcon, CaretRightIcon, CaretDoubleLeftIcon } from '@phosphor-icons/react'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -13,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+
+const SIZES = [10, 20, 30, 50]
 
 type DataTablePaginationProps = {
   /** page is 1-based: how many pages this listing has walked through. */
@@ -52,6 +50,13 @@ export function DataTablePagination({
   const { t } = useI18n()
   const pages = total === undefined ? undefined : Math.max(1, Math.ceil(total / pageSize))
 
+  // Kite: rows that fit on the smallest page need no paging, only their count.
+  if (!hasPrevious && !hasNext && total !== undefined && total <= SIZES[0]) {
+    return summary ? (
+      <div className={cn('px-2 text-sm text-muted-foreground', className)}>{summary}</div>
+    ) : null
+  }
+
   return (
     <div
       className={cn(
@@ -72,7 +77,7 @@ export function DataTablePagination({
               <SelectValue placeholder={pageSize} />
             </SelectTrigger>
             <SelectContent side='top'>
-              {[10, 20, 30, 50].map((size) => (
+              {SIZES.map((size) => (
                 <SelectItem key={size} value={`${size}`}>
                   {size}
                 </SelectItem>
@@ -99,7 +104,7 @@ export function DataTablePagination({
             disabled={!hasPrevious}
           >
             <span className='sr-only'>{t('list.first')}</span>
-            <ChevronsLeftIcon className='h-4 w-4' />
+            <CaretDoubleLeftIcon className='h-4 w-4' />
           </Button>
           <Button
             variant='outline'
@@ -108,7 +113,7 @@ export function DataTablePagination({
             disabled={!hasPrevious}
           >
             <span className='sr-only'>{t('list.previous')}</span>
-            <ChevronLeftIcon className='h-4 w-4' />
+            <CaretLeftIcon className='h-4 w-4' />
           </Button>
           <Button
             variant='outline'
@@ -117,7 +122,7 @@ export function DataTablePagination({
             disabled={!hasNext}
           >
             <span className='sr-only'>{t('list.next')}</span>
-            <ChevronRightIcon className='h-4 w-4' />
+            <CaretRightIcon className='h-4 w-4' />
           </Button>
         </div>
       </div>

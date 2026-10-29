@@ -8,6 +8,7 @@ import (
 
 	"github.com/kite-plus/kite/internal/content"
 	"github.com/kite-plus/kite/internal/kitew"
+	"github.com/kite-plus/kite/internal/latest"
 )
 
 // kiteRelease says which Kite release builds the site.
@@ -21,6 +22,11 @@ func kiteRelease(view View) KiteRelease {
 	}
 	if view.Kitew != nil {
 		k.Wrapper, k.Deploy = view.Kitew()
+	}
+	if view.Latest != nil && k.Running != "" {
+		if r := view.Latest(); r != nil && latest.Newer(r.Version, k.Running) {
+			k.Latest, k.LatestURL, k.Container = r.Version, r.URL, latest.InContainer()
+		}
 	}
 	return k
 }

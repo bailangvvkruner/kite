@@ -1,7 +1,6 @@
 import { type ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { CaretRightIcon } from '@phosphor-icons/react'
 import {
   Collapsible,
   CollapsibleContent,
@@ -70,22 +69,6 @@ function NavBadge({ children }: { children: ReactNode }) {
 }
 
 /**
- * Kite: ActiveBar marks the current page with a short bar at the item's
- * start, as Halo's console marks its menu.
- */
-function ActiveBar({ className }: { className: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'pointer-events-none absolute top-1/2 w-[3px] -translate-y-1/2 rounded-full bg-primary',
-        className
-      )}
-    />
-  )
-}
-
-/**
  * Kite: closest is the entry a page belongs to: the one whose address the
  * page's starts with, and of those the longest, so a page under an entry,
  * such as a plugin's settings or a post in the editor, keeps it marked, and
@@ -111,12 +94,12 @@ function SidebarMenuLink({ item, active }: { item: NavLink; active: boolean }) {
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
         <Link to={item.url} onClick={() => setOpenMobile(false)}>
-          {item.icon && <item.icon />}
+          {/* Kite: the current page's icon is filled, the rest drawn in line. */}
+          {item.icon && <item.icon weight={active ? 'fill' : 'regular'} />}
           <span>{item.title}</span>
           {item.badge && <NavBadge>{item.badge}</NavBadge>}
         </Link>
       </SidebarMenuButton>
-      {active && <ActiveBar className='-start-1.5 h-5' />}
     </SidebarMenuItem>
   )
 }
@@ -141,7 +124,7 @@ function SidebarMenuCollapsible({
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             {item.badge && <NavBadge>{item.badge}</NavBadge>}
-            <ChevronRight className='ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 rtl:rotate-180' />
+            <CaretRightIcon className='ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 rtl:rotate-180' />
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent className='CollapsibleContent'>
@@ -157,8 +140,6 @@ function SidebarMenuCollapsible({
                       {subItem.badge && <NavBadge>{subItem.badge}</NavBadge>}
                     </Link>
                   </SidebarMenuSubButton>
-                  {/* Over the submenu's rule: its padding plus its 1px border. */}
-                  {active && <ActiveBar className='-start-3 h-4' />}
                 </SidebarMenuSubItem>
               )
             })}
@@ -187,7 +168,7 @@ function SidebarMenuCollapsedDropdown({
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             {item.badge && <NavBadge>{item.badge}</NavBadge>}
-            <ChevronRight className='ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+            <CaretRightIcon className='ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent side='right' align='start' sideOffset={4}>

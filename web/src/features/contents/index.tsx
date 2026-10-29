@@ -1,7 +1,14 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import type { OnChangeFn, RowSelectionState } from "@tanstack/react-table";
-import { ArrowLeft, Plus, RotateCcw, Trash2, Upload, XCircle } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  PlusIcon,
+  ArrowCounterClockwiseIcon,
+  TrashIcon,
+  UploadSimpleIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import type { Summary } from "@/api/client";
@@ -33,7 +40,6 @@ import { PageTitle } from "@/components/layout/page-title";
 import { PublishDialog } from "@/components/publish/PublishDialog";
 import { QueryError } from "@/components/query-error";
 import { ReadOnlyNote } from "@/components/read-only-note";
-import { statuses } from "@/components/StatusLabel";
 import { useContentsColumns } from "./components/contents-columns";
 import { ContentsTable } from "./components/contents-table";
 import { DEFAULT_PAGE_SIZE, defaultSort, termsOf, withTerms, type ContentSearch } from "./search";
@@ -199,14 +205,18 @@ export function ContentList() {
   );
 
   const unfiltered = !search.status?.length && !search.q && !search.terms?.length;
-  // The counts are of what is not deleted, so the trash's facet goes without.
-  const statusOptions = STATUSES.map((status) => ({
-    label: t(`status.${status}` as Key),
-    value: status,
-    icon: statuses[status].icon,
-    className: statuses[status].className,
-    count: trashed ? undefined : counts[status],
-  }));
+  // The counts are of what is not deleted, so the trash has no tabs. Archived
+  // shows only once something is.
+  const statusTabs = trashed
+    ? undefined
+    : [
+        { label: t("list.allStatuses"), count: counts.all },
+        ...STATUSES.filter((status) => status !== "archived" || counts.archived).map((status) => ({
+          value: status,
+          label: t(`status.${status}` as Key),
+          count: counts[status],
+        })),
+      ];
   const total = page.data?.total;
 
   return (
@@ -223,7 +233,7 @@ export function ContentList() {
           {trashed ? (
             <Button variant="outline" asChild>
               <Link to="/content/$kind" params={{ kind }}>
-                <ArrowLeft />
+                <ArrowLeftIcon />
                 {t("list.backTo", { kind: kindLabel.many(kind) })}
               </Link>
             </Button>
@@ -231,7 +241,7 @@ export function ContentList() {
             <>
               <Button variant="outline" asChild>
                 <Link to="/content/$kind" params={{ kind }} search={{ trash: true }}>
-                  <Trash2 />
+                  <TrashIcon />
                   {t("status.trash")}
                   {counts.trash ? (
                     <span className="text-muted-foreground tabular-nums">{counts.trash}</span>
@@ -241,7 +251,7 @@ export function ContentList() {
               {writable && (
                 <Button asChild>
                   <Link to="/content/$kind/$id" params={{ kind, id: "new" }}>
-                    <Plus />
+                    <PlusIcon />
                     {t("list.newKind", { kind: kindLabel.one(kind) })}
                   </Link>
                 </Button>
@@ -255,7 +265,7 @@ export function ContentList() {
 
         {batchResult && (
           <Alert variant="destructive">
-            <XCircle />
+            <XCircleIcon />
             <AlertTitle>
               {t("list.partial", {
                 done: batchResult.result.succeeded.length,
@@ -300,7 +310,7 @@ export function ContentList() {
             onSearch={onSearch}
             sort={sort}
             taxonomies={taxonomies}
-            statusOptions={statusOptions}
+            statusTabs={statusTabs}
             termOptions={termOptions}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
@@ -320,7 +330,7 @@ export function ContentList() {
                   {writable && (
                     <Button asChild size="sm">
                       <Link to="/content/$kind/$id" params={{ kind, id: "new" }}>
-                        <Plus />
+                        <PlusIcon />
                         {t("list.newKind", { kind: kindLabel.one(kind) })}
                       </Link>
                     </Button>
@@ -337,19 +347,19 @@ export function ContentList() {
                   size="sm"
                   onClick={() => runBatch("restore", selected.map(targetOf))}
                 >
-                  <RotateCcw />
+                  <ArrowCounterClockwiseIcon />
                   {t("list.restore")}
                 </Button>
               ) : (
                 <>
                   {canPublish(delivery.data) && (
                     <Button variant="outline" size="sm" onClick={() => setPublishing(selected)}>
-                      <Upload />
+                      <UploadSimpleIcon />
                       {t("publish.action")}
                     </Button>
                   )}
                   <Button variant="destructive" size="sm" onClick={() => setConfirming(selected)}>
-                    <Trash2 />
+                    <TrashIcon />
                     {t("editor.delete")}
                   </Button>
                 </>

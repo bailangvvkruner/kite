@@ -1,9 +1,10 @@
+import type { Icon } from '@phosphor-icons/react'
 import { type LinkProps } from '@tanstack/react-router'
 
 type BaseNavItem = {
   title: string
   badge?: string
-  icon?: React.ElementType
+  icon?: Icon
 }
 
 type NavLink = BaseNavItem & {

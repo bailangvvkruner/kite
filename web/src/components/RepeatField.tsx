@@ -1,5 +1,13 @@
 import { useRef, useState, type ReactNode } from "react";
-import { ArrowDown, ArrowUp, ChevronDown, GripVertical, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CaretDownIcon,
+  DotsSixVerticalIcon,
+  DotsThreeIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
 
 import type { Field } from "@/api/client";
 import { useI18n } from "@/i18n";
@@ -262,7 +270,7 @@ function TreeList({
                       aria-label={nested.label || nested.key}
                       onClick={() => setClosed((current) => padded(current, entries.length).map((each, j) => (j === g ? !each : each)))}
                     >
-                      <ChevronDown className={cn("transition-transform", !open && "-rotate-90")} />
+                      <CaretDownIcon className={cn("transition-transform", !open && "-rotate-90")} />
                     </Button>
                     <Cells
                       id={`${id}-${g}`}
@@ -439,20 +447,20 @@ function EntryMenu({
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="size-8 shrink-0 text-muted-foreground" aria-label={t("form.entryMenu")}>
-          <MoreHorizontal />
+          <DotsThreeIcon />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem disabled={first} onSelect={() => onMove(-1)}>
-          <ArrowUp />
+          <ArrowUpIcon />
           {t("form.moveUp")}
         </DropdownMenuItem>
         <DropdownMenuItem disabled={last} onSelect={() => onMove(1)}>
-          <ArrowDown />
+          <ArrowDownIcon />
           {t("form.moveDown")}
         </DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onSelect={onRemove}>
-          <Trash2 />
+          <TrashIcon />
           {t("form.removeEntry")}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -470,7 +478,7 @@ function Handle(props: React.HTMLAttributes<HTMLSpanElement> & { draggable: bool
       title={t("form.dragToSort")}
       className="flex size-6 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground/60 hover:bg-muted hover:text-muted-foreground active:cursor-grabbing"
     >
-      <GripVertical className="size-4" />
+      <DotsSixVerticalIcon className="size-4" />
     </span>
   );
 }
@@ -478,7 +486,7 @@ function Handle(props: React.HTMLAttributes<HTMLSpanElement> & { draggable: bool
 function AddButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
     <Button type="button" variant="outline" size="sm" className="justify-self-start" onClick={onClick}>
-      <Plus />
+      <PlusIcon />
       {children}
     </Button>
   );

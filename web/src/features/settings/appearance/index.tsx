@@ -1,67 +1,51 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { locales, useI18n, type Locale } from "@/i18n";
 import { useTheme, type Theme } from "@/lib/theme";
-import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormActions } from "@/components/form-actions";
 import { ContentSection } from "../components/content-section";
+import { Group } from "../components/form-group";
 
-function LightPreview() {
+/**
+ * Preview draws the studio in small: the rail's canvas, a sheet on it and a
+ * few rows, in one scheme's colors.
+ */
+function Preview({ canvas, sheet, line, ink }: { canvas: string; sheet: string; line: string; ink: string }) {
   return (
-    <div className="space-y-2 rounded-sm bg-[#f5f5f5] p-2">
-      <div className="space-y-2 rounded-md bg-white p-2 shadow-xs">
-        <div className="h-2 w-20 rounded-lg bg-[#e5e7eb]" />
-        <div className="h-2 w-25 rounded-lg bg-[#e5e7eb]" />
+    <div className="flex h-24 gap-1.5 rounded-sm p-1.5" style={{ background: canvas }}>
+      <div className="flex w-1/4 flex-col gap-1.5 pt-1">
+        <div className="h-1.5 w-3/4 rounded-full" style={{ background: ink }} />
+        <div className="h-3 rounded-[3px]" style={{ background: sheet }} />
+        <div className="h-1.5 w-2/3 rounded-full" style={{ background: line }} />
+        <div className="h-1.5 w-1/2 rounded-full" style={{ background: line }} />
       </div>
-      <div className="flex items-center space-x-2 rounded-md bg-white p-2 shadow-xs">
-        <div className="h-4 w-4 rounded-full bg-[#e5e7eb]" />
-        <div className="h-2 w-25 rounded-lg bg-[#e5e7eb]" />
-      </div>
-      <div className="flex items-center space-x-2 rounded-md bg-white p-2 shadow-xs">
-        <div className="h-4 w-4 rounded-full bg-[#e5e7eb]" />
-        <div className="h-2 w-25 rounded-lg bg-[#e5e7eb]" />
+      <div className="flex flex-1 flex-col gap-1.5 rounded-[5px] p-2" style={{ background: sheet }}>
+        <div className="h-2 w-1/3 rounded-full" style={{ background: ink }} />
+        <div className="h-6 rounded-[3px] border" style={{ borderColor: line }} />
+        <div className="h-1.5 w-3/4 rounded-full" style={{ background: line }} />
+        <div className="h-1.5 w-1/2 rounded-full" style={{ background: line }} />
       </div>
     </div>
   );
 }
 
-function DarkPreview() {
-  return (
-    <div className="space-y-2 rounded-sm bg-[#0f1013] p-2">
-      <div className="space-y-2 rounded-md bg-[#17181c] p-2 shadow-xs">
-        <div className="h-2 w-20 rounded-lg bg-[#6b7280]" />
-        <div className="h-2 w-25 rounded-lg bg-[#6b7280]" />
-      </div>
-      <div className="flex items-center space-x-2 rounded-md bg-[#17181c] p-2 shadow-xs">
-        <div className="h-4 w-4 rounded-full bg-[#6b7280]" />
-        <div className="h-2 w-25 rounded-lg bg-[#6b7280]" />
-      </div>
-      <div className="flex items-center space-x-2 rounded-md bg-[#17181c] p-2 shadow-xs">
-        <div className="h-4 w-4 rounded-full bg-[#6b7280]" />
-        <div className="h-2 w-25 rounded-lg bg-[#6b7280]" />
-      </div>
-    </div>
-  );
-}
+const lightPreview = <Preview canvas="#edf2f9" sheet="#ffffff" line="#dfe5ee" ink="#172036" />;
+const darkPreview = <Preview canvas="#0c0f15" sheet="#141821" line="#2a303c" ink="#c3cad8" />;
 
 const themes = [
-  { value: "light", label: "settings.light", preview: <LightPreview /> },
-  { value: "dark", label: "settings.dark", preview: <DarkPreview /> },
+  { value: "light", label: "settings.light", preview: lightPreview },
+  { value: "dark", label: "settings.dark", preview: darkPreview },
   {
     value: "system",
     label: "settings.system",
     preview: (
       <div className="grid grid-cols-2 overflow-hidden rounded-sm">
-        <div className="overflow-hidden">
-          <LightPreview />
-        </div>
-        <div className="overflow-hidden">
-          <DarkPreview />
-        </div>
+        <div className="overflow-hidden">{lightPreview}</div>
+        <div className="overflow-hidden">{darkPreview}</div>
       </div>
     ),
   },
@@ -80,68 +64,81 @@ export function AppearanceSettings() {
   // The header's toggle can change the theme under an open form.
   useEffect(() => setChosenTheme(theme), [theme]);
   useEffect(() => setChosenLocale(locale), [locale]);
-  const dirty = chosenLocale !== locale || chosenTheme !== theme;
+  const changes = Number(chosenLocale !== locale) + Number(chosenTheme !== theme);
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
+  const save = () => {
     if (chosenTheme !== theme) setTheme(chosenTheme);
     if (chosenLocale !== locale) setLocale(chosenLocale);
     toast.success(t("settings.appearanceSaved"));
   };
 
   return (
-    <ContentSection title={t("settings.interface")} desc={t("settings.interfaceNote")}>
-      <form onSubmit={submit} className="space-y-8">
-        <div className="grid gap-2">
-          <Label htmlFor="locale">{t("nav.language")}</Label>
-          <div className="relative w-max">
-            <select
-              id="locale"
-              value={chosenLocale}
-              onChange={(e) => setChosenLocale(e.target.value as Locale)}
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "w-50 appearance-none font-normal",
-                "dark:bg-background dark:hover:bg-background",
-              )}
-            >
+    <ContentSection
+      title={t("settings.interface")}
+      desc={t("settings.interfaceNote")}
+      actions={
+        <FormActions
+          changes={changes}
+          onRevert={() => {
+            setChosenLocale(locale);
+            setChosenTheme(theme);
+          }}
+          onSave={save}
+        />
+      }
+      end={{ title: t("settings.endBrowser"), note: t("settings.endBrowserNote") }}
+    >
+      <form
+        onSubmit={(event: FormEvent) => {
+          event.preventDefault();
+          if (changes > 0) save();
+        }}
+      >
+        <Group
+          id="interface-language"
+          title={t("nav.language")}
+          note={t("settings.languageNote")}
+          changed={chosenLocale !== locale}
+        >
+          <Select value={chosenLocale} onValueChange={(value) => setChosenLocale(value as Locale)}>
+            <SelectTrigger id="locale" aria-label={t("nav.language")} className="w-full @xl/form:w-72">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
               {(Object.keys(locales) as Locale[]).map((code) => (
-                <option key={code} value={code}>
+                <SelectItem key={code} value={code}>
                   {locales[code].label}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute inset-e-3 top-2.5 size-4 opacity-50" />
-          </div>
-          <p className="text-sm text-muted-foreground">{t("settings.languageNote")}</p>
-        </div>
+            </SelectContent>
+          </Select>
+        </Group>
 
-        <div className="grid gap-2">
-          <Label>{t("settings.appearance")}</Label>
-          <p className="text-sm text-muted-foreground">{t("settings.appearanceNote")}</p>
+        <Group
+          id="interface-appearance"
+          title={t("settings.appearance")}
+          note={t("settings.appearanceNote")}
+          changed={chosenTheme !== theme}
+        >
           <RadioGroup
             value={chosenTheme}
             onValueChange={(value) => setChosenTheme(value as Theme)}
-            className="grid max-w-2xl grid-cols-1 gap-8 pt-2 sm:grid-cols-3"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-3"
           >
             {themes.map((option) => (
               <Label
                 key={option.value}
-                className="flex-col items-stretch [&:has([data-state=checked])>div]:border-primary"
+                className="flex-col items-stretch gap-0 [&:has([data-state=checked])>div]:border-primary [&:has([data-state=checked])>span]:font-medium"
               >
                 <RadioGroupItem value={option.value} className="sr-only" />
-                <div className="items-center rounded-md border-2 border-muted p-1 hover:border-accent">
+                <div className="rounded-lg border-2 border-transparent p-0.5 ring-1 ring-border hover:ring-foreground/20">
                   {option.preview}
                 </div>
                 <span className="block w-full p-2 text-center font-normal">{t(option.label)}</span>
               </Label>
             ))}
           </RadioGroup>
-        </div>
-
-        <Button type="submit" disabled={!dirty}>
-          {t("settings.saveAppearance")}
-        </Button>
+        </Group>
       </form>
     </ContentSection>
   );

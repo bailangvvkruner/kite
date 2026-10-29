@@ -8,16 +8,19 @@ import {
 } from '@/components/ui/sidebar'
 import { useSidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
+import { NavPublish } from './nav-publish'
 import { NavUser } from './nav-user'
-import { SiteBrand } from './site-brand'
+import { StudioBrand } from './studio-brand'
 
 export function AppSidebar() {
-  const { collapsible, variant } = useLayout()
+  const { collapsible } = useLayout()
   const sidebarData = useSidebarData()
   return (
-    <Sidebar collapsible={collapsible} variant={variant}>
-      <SidebarHeader>
-        <SiteBrand />
+    // Kite: always inset, each page a sheet raised over the rail's canvas.
+    <Sidebar collapsible={collapsible} variant='inset'>
+      {/* As tall as the sheet's top bar, so the brand sits level with it. */}
+      <SidebarHeader className='h-16 justify-center py-0'>
+        <StudioBrand />
       </SidebarHeader>
       <SidebarContent>
         {sidebarData.navGroups.map((props) => (
@@ -25,6 +28,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
+        <NavPublish />
         <NavUser />
       </SidebarFooter>
       <SidebarRail />

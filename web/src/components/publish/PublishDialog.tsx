@@ -1,4 +1,4 @@
-import { Upload } from "lucide-react";
+import { UploadSimpleIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { useI18n } from "@/i18n";
@@ -67,7 +67,7 @@ export function PublishDialog({ ids, paths, open, onOpenChange, onDone, title, d
             {publish.pending ? (
               <Spinner />
             ) : (
-              <Upload />
+              <UploadSimpleIcon />
             )}
             {publish.needsConfirmation ? t("publish.anyway") : t("publish.action")}
           </Button>

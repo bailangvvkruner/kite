@@ -1,17 +1,17 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pin } from "lucide-react";
+import { PushPinIcon } from "@phosphor-icons/react";
 
 import type { Summary } from "@/api/client";
 import { useI18n } from "@/i18n";
 import { useTaxonomyLabel } from "@/hooks/useKindLabel";
-import { isoDate } from "@/lib/dates";
+import { useDates } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/data-table";
-import { StatusLabel } from "@/components/StatusLabel";
+import { StatusPill } from "@/components/StatusLabel";
 import { RowActions } from "./row-actions";
 
 interface Options {
@@ -40,6 +40,7 @@ export function useContentsColumns({
 }: Options): ColumnDef<Summary>[] {
   const { t } = useI18n();
   const taxonomyLabel = useTaxonomyLabel();
+  const dates = useDates();
 
   return useMemo<ColumnDef<Summary>[]>(
     () => {
@@ -76,26 +77,51 @@ export function useContentsColumns({
           cell: ({ row }) => {
             const item = row.original;
             const name = item.title || item.slug;
+            const sorts = taxonomies.filter((taxonomy) => item.taxonomies?.[taxonomy]?.length);
             return (
               // A clamp rather than truncate lets a long title give way on a narrow screen.
-              <div className="flex max-w-[28rem] min-w-0 items-center gap-2">
-                {trashed ? (
-                  <span className="line-clamp-1 font-medium whitespace-normal wrap-anywhere">{name}</span>
-                ) : (
-                  <Link
-                    to="/content/$kind/$id"
-                    params={{ kind: item.kind, id: item.id }}
-                    data-row-link
-                    className="line-clamp-1 font-medium whitespace-normal wrap-anywhere hover:underline"
-                  >
-                    {name}
-                  </Link>
-                )}
-                {item.pinned && (
-                  <Badge variant="outline" className="shrink-0 gap-1 text-amber-700 dark:text-amber-400">
-                    <Pin className="size-3" />
-                    {t("field.pinned")}
-                  </Badge>
+              <div className="max-w-[36rem] min-w-0 py-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  {trashed ? (
+                    <span className="line-clamp-1 font-medium whitespace-normal wrap-anywhere">{name}</span>
+                  ) : (
+                    <Link
+                      to="/content/$kind/$id"
+                      params={{ kind: item.kind, id: item.id }}
+                      data-row-link
+                      className="line-clamp-1 font-medium whitespace-normal wrap-anywhere hover:underline"
+                    >
+                      {name}
+                    </Link>
+                  )}
+                  {item.pinned && (
+                    <PushPinIcon className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-label={t("field.pinned")} />
+                  )}
+                </div>
+                {/* What the item is filed under, each term a filter: categories by
+                    name, tags with a hash, as the dashboard writes them. */}
+                {sorts.length > 0 && (
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+                    {sorts.map((taxonomy, i) => (
+                      <span key={taxonomy} className="flex flex-wrap items-center gap-x-1.5">
+                        {i > 0 && <span aria-hidden>·</span>}
+                        {(item.taxonomies?.[taxonomy] ?? []).map((term) => (
+                          <button
+                            key={term}
+                            type="button"
+                            title={taxonomyLabel(taxonomy)}
+                            onClick={() => onTerm(taxonomy, term)}
+                            className={cn(
+                              "hover:text-foreground",
+                              chosenTerms(taxonomy).includes(term) && "font-medium text-primary",
+                            )}
+                          >
+                            {taxonomy === "tags" ? `#${term}` : term}
+                          </button>
+                        ))}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
             );
@@ -130,17 +156,14 @@ export function useContentsColumns({
               );
             },
             enableSorting: false,
-            meta: {
-              title: taxonomyLabel(taxonomy),
-              className: taxonomy === "tags" ? "hidden xl:table-cell" : "hidden md:table-cell",
-            },
+            meta: { title: taxonomyLabel(taxonomy) },
           }),
         ),
         {
           id: "status",
           accessorKey: "status",
           header: ({ column }) => <DataTableColumnHeader column={column} title={t("list.status")} />,
-          cell: ({ row }) => <StatusLabel status={row.original.status} />,
+          cell: ({ row }) => <StatusPill status={row.original.status} />,
           enableSorting: false,
           meta: { title: t("list.status") },
         },
@@ -156,11 +179,12 @@ export function useContentsColumns({
             ),
             cell: ({ row }) => {
               const item = row.original;
+              // An item that records no time shows when its file last changed.
+              const updated = item.updated_at ?? item.modified_at;
               if (field === "updated_at") {
-                // An item that records no time shows when its file last changed.
                 return (
-                  <span className="text-muted-foreground tabular-nums">
-                    {isoDate(item.updated_at ?? item.modified_at)}
+                  <span title={dates.full(updated)} className="text-muted-foreground tabular-nums">
+                    {dates.day(updated)}
                   </span>
                 );
               }
@@ -168,14 +192,23 @@ export function useContentsColumns({
               if (!item.published_at && item.status === "published") {
                 return <span className="text-muted-foreground">{t("list.noDate")}</span>;
               }
+              // The update time is folded away by default, so its hint is here.
+              const hint = [
+                item.published_at && t("list.publishedOn", { time: dates.full(item.published_at) }),
+                updated && t("list.updatedOn", { time: dates.full(updated) }),
+              ]
+                .filter(Boolean)
+                .join("\n");
               return (
-                <span className="text-muted-foreground tabular-nums">{isoDate(item.published_at)}</span>
+                <span title={hint} className="text-muted-foreground tabular-nums">
+                  {dates.day(item.published_at)}
+                </span>
               );
             },
             enableSorting: sortable.includes(field),
             meta: {
               title: t(field === "published_at" ? "list.publishedAt" : "list.updatedAt"),
-              className: cn(field === "updated_at" ? "hidden lg:table-cell" : "hidden sm:table-cell"),
+              className: field === "updated_at" ? "hidden xl:table-cell" : "hidden sm:table-cell",
             },
           }),
         ),
@@ -197,6 +230,6 @@ export function useContentsColumns({
       ];
       return writable ? columns : columns.filter((column) => column.id !== "select");
     },
-    [t, taxonomyLabel, sortable, taxonomies, trashed, writable, chosenTerms, onTerm, onDelete, onRestore],
+    [t, dates, taxonomyLabel, sortable, taxonomies, trashed, writable, chosenTerms, onTerm, onDelete, onRestore],
   );
 }

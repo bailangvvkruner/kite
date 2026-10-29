@@ -2,15 +2,15 @@ import React, { useDeferredValue, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import {
-  ArrowRight,
-  ChevronRight,
-  ExternalLink,
-  FileText,
-  Laptop,
-  Moon,
-  Plus,
-  Sun,
-} from 'lucide-react'
+  ArrowRightIcon,
+  CaretRightIcon,
+  ArrowSquareOutIcon,
+  FileTextIcon,
+  LaptopIcon,
+  MoonIcon,
+  PlusIcon,
+  SunIcon,
+} from '@phosphor-icons/react'
 import { api, unwrap } from '@/api/client'
 import { useI18n } from '@/i18n'
 import { useContentTypes, useSite, useWritable } from '@/hooks/useContents'
@@ -75,11 +75,11 @@ export function CommandMenu() {
             key: `go:${sub.url}`,
             label: (
               <>
-                {item.title} <ChevronRight /> {sub.title}
+                {item.title} <CaretRightIcon /> {sub.title}
               </>
             ),
             text: `${item.title} ${sub.title}`,
-            icon: ArrowRight,
+            icon: ArrowRightIcon,
             run: () => void navigate({ to: sub.url }),
           }))
         : [
@@ -87,7 +87,7 @@ export function CommandMenu() {
               key: `go:${item.url}`,
               label: item.title,
               text: item.title,
-              icon: ArrowRight,
+              icon: ArrowRightIcon,
               run: () => void navigate({ to: item.url }),
             },
           ]
@@ -102,7 +102,7 @@ export function CommandMenu() {
         key: `new:${kind}`,
         label,
         text: label,
-        icon: Plus,
+        icon: PlusIcon,
         run: () =>
           void navigate({
             to: '/content/$kind/$id',
@@ -114,14 +114,14 @@ export function CommandMenu() {
       key: 'site',
       label: t('nav.viewSite'),
       text: t('nav.viewSite'),
-      icon: ExternalLink,
+      icon: ArrowSquareOutIcon,
       run: () => void window.open(siteHome(site.data), '_blank', 'noreferrer'),
     },
   ]
   const themes: Entry[] = [
-    { key: 'theme:light', text: t('settings.light'), icon: Sun, run: () => setTheme('light') },
-    { key: 'theme:dark', text: t('settings.dark'), icon: Moon, run: () => setTheme('dark') },
-    { key: 'theme:system', text: t('settings.system'), icon: Laptop, run: () => setTheme('system') },
+    { key: 'theme:light', text: t('settings.light'), icon: SunIcon, run: () => setTheme('light') },
+    { key: 'theme:dark', text: t('settings.dark'), icon: MoonIcon, run: () => setTheme('dark') },
+    { key: 'theme:system', text: t('settings.system'), icon: LaptopIcon, run: () => setTheme('system') },
   ].map((entry) => ({ ...entry, label: entry.text }))
 
   const matches = (entry: Entry) =>
@@ -177,7 +177,7 @@ export function CommandMenu() {
                     )
                   }
                 >
-                  <FileText />
+                  <FileTextIcon />
                   <span className='truncate'>{item.title || item.slug}</span>
                   <StatusLabel status={item.status} className='ms-auto shrink-0 gap-1.5 text-xs' />
                 </CommandItem>
@@ -194,9 +194,9 @@ export function CommandMenu() {
                     value={entry.key}
                     onSelect={() => runCommand(entry.run)}
                   >
-                    {entry.icon === ArrowRight ? (
+                    {entry.icon === ArrowRightIcon ? (
                       <div className='flex size-4 items-center justify-center'>
-                        <ArrowRight className='size-2 text-muted-foreground/80' />
+                        <ArrowRightIcon className='size-2 text-muted-foreground/80' />
                       </div>
                     ) : (
                       <entry.icon />

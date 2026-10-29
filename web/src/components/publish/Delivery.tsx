@@ -1,4 +1,12 @@
-import { Check, GitMerge, Minus, TriangleAlert, Upload, X, XCircle } from "lucide-react";
+import {
+  CheckIcon,
+  GitMergeIcon,
+  MinusIcon,
+  WarningIcon,
+  UploadSimpleIcon,
+  XIcon,
+  XCircleIcon,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 import { useI18n, useProblem, type Key, type Values } from "@/i18n";
@@ -91,6 +99,18 @@ export function pausedAt(delivery: DeliveryState | undefined, locale: string): s
   return new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(when);
 }
 
+/** checkedAgo says how long since the remote was last looked at. */
+export function checkedAgo(iso: string | undefined, locale: string, t: Translate): string | null {
+  if (!iso) return null;
+  const seconds = (Date.now() - Date.parse(iso)) / 1000;
+  if (!Number.isFinite(seconds)) return null;
+  if (seconds < 60) return t("publish.checkedNow");
+  const minutes = Math.round(seconds / 60);
+  const words = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  const when = minutes < 60 ? words.format(-minutes, "minute") : words.format(-Math.round(minutes / 60), "hour");
+  return t("publish.checked", { when });
+}
+
 function stepLabel(step: Step["key"], standing: Standing): Key {
   return `publish.step.${step}.${standing}` as Key;
 }
@@ -119,13 +139,13 @@ export function StepMark({
       )}
     >
       {standing === "done" ? (
-        <Check strokeWidth={3} />
+        <CheckIcon weight="bold" />
       ) : standing === "failed" ? (
-        <X strokeWidth={3} />
+        <XIcon weight="bold" />
       ) : standing === "working" ? (
         <Spinner className="size-[70%]!" />
       ) : standing === "unknown" ? (
-        <Minus />
+        <MinusIcon />
       ) : current ? (
         <span className="size-[35%] rounded-full bg-warning" />
       ) : null}
@@ -252,7 +272,7 @@ export function PublishProblems({ publish }: { publish: Publish }) {
           disabled={publish.pending}
           onClick={() => void publish.runWithoutHooks()}
         >
-          {publish.pending ? <Spinner /> : <Upload />}
+          {publish.pending ? <Spinner /> : <UploadSimpleIcon />}
           {t("publish.skipHooks")}
         </Button>
       )}
@@ -265,7 +285,7 @@ export function PublishProblems({ publish }: { publish: Publish }) {
           disabled={publish.pending}
           onClick={() => void publish.push()}
         >
-          {publish.pending ? <Spinner /> : <Upload />}
+          {publish.pending ? <Spinner /> : <UploadSimpleIcon />}
           {t("publish.pushAgain")}
         </Button>
       )}
@@ -327,7 +347,7 @@ function RemoteMoved({ remote, publish }: { remote: RemoteChange; publish: Publi
             {publish.pending ? (
               <Spinner />
             ) : (
-              <GitMerge />
+              <GitMergeIcon />
             )}
             {t("publish.remote.rebase")}
           </Button>
@@ -368,7 +388,7 @@ function Problem({
 }) {
   return (
     <Alert variant={tone === "stop" ? "destructive" : "default"}>
-      {tone === "stop" ? <XCircle /> : <TriangleAlert />}
+      {tone === "stop" ? <XCircleIcon /> : <WarningIcon />}
       <AlertTitle>{title}</AlertTitle>
       {(detail || fix) && (
         <AlertDescription>

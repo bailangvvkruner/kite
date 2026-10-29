@@ -308,6 +308,8 @@ export function useItem(
     if (!target && mounted.current) created.current?.(saved.id);
     void queryClient.invalidateQueries({ queryKey: ["contents"] });
     void queryClient.invalidateQueries({ queryKey: ["site"] });
+    // What waits to be published changed with the file.
+    void queryClient.invalidateQueries({ queryKey: ["publish"] });
     return saved.id;
   }, [queryClient, show, mark, enter, keep, forget]);
 

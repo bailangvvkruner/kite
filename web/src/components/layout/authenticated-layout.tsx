@@ -7,6 +7,7 @@ import { LayoutProvider } from '@/context/layout-provider'
 import { SearchProvider } from '@/context/search-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
+import { ReleaseNotice } from '@/components/release-notice'
 import { SkipToMain } from '@/components/skip-to-main'
 
 type AuthenticatedLayoutProps = {
@@ -21,6 +22,7 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
       <LayoutProvider>
         <SidebarProvider defaultOpen={defaultOpen}>
           <SkipToMain />
+          <ReleaseNotice />
           <AppSidebar />
           <SidebarInset
             className={cn(
@@ -33,7 +35,11 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
 
               // If layout is fixed and sidebar is inset,
               // set the height to 100svh - spacing (total margins) to prevent overflow
-              'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
+              'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]',
+
+              // Kite: the sheet lifts off the canvas by a hairline and a soft shadow.
+              'md:peer-data-[variant=inset]:shadow-[0_0_0_1px_rgb(23_32_54/0.05),0_6px_24px_rgb(23_32_54/0.05)]',
+              'dark:md:peer-data-[variant=inset]:shadow-[0_0_0_1px_rgb(255_255_255/0.06)]'
             )}
           >
             {children ?? <Outlet />}

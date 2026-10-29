@@ -564,4 +564,11 @@ type KiteRelease struct {
 	// Deploy says how the deploy workflow gets Kite: "kitew", "self" when it
 	// installs a Kite of its own, or "" when there is no deploy workflow.
 	Deploy string `json:"deploy,omitempty"`
+	// Latest is a release newer than Running, once one is out, and
+	// LatestURL its page with the notes.
+	Latest    string `json:"latest,omitempty"`
+	LatestURL string `json:"latest_url,omitempty"`
+	// Container says this server runs in a container, which a newer Kite
+	// replaces as a new image.
+	Container bool `json:"container,omitempty"`
 }

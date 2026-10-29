@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronDown, Clock, Trash2 } from "lucide-react";
+import { CaretDownIcon, ClockIcon, TrashIcon } from "@phosphor-icons/react";
 
 import type { Draft } from "@/api/client";
 import { useI18n, type Key } from "@/i18n";
@@ -55,7 +55,7 @@ export function PublishMenu({
           {/* On a phone the status shows by its icon and color alone. */}
           <Icon className={cn("size-3.5", tone)} />
           <span className={cn("text-[13px] max-sm:sr-only", tone)}>{t(`status.${draft.status}` as Key)}</span>
-          <ChevronDown className="-ms-0.5 size-3.5 text-muted-foreground" />
+          <CaretDownIcon className="-ms-0.5 size-3.5 text-muted-foreground" />
           {troubled && <span className="absolute -end-1 -top-1 size-2.5 rounded-full border-2 border-background bg-destructive" />}
         </Button>
       </PopoverTrigger>
@@ -100,7 +100,7 @@ export function PublishMenu({
           />
           {waitsForDate(draft) && (
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock className="size-3 shrink-0" />
+              <ClockIcon className="size-3 shrink-0" />
               {t("editor.waitsForDate", { date: date(draft.published_at, "long") })}
             </p>
           )}
@@ -144,7 +144,7 @@ export function PublishMenu({
                 onDelete();
               }}
             >
-              <Trash2 />
+              <TrashIcon />
               {t("editor.delete")}
             </Button>
           </>

@@ -39,6 +39,7 @@ import (
 	"github.com/kite-plus/kite/internal/config"
 	"github.com/kite-plus/kite/internal/content"
 	"github.com/kite-plus/kite/internal/kitew"
+	"github.com/kite-plus/kite/internal/latest"
 	"github.com/kite-plus/kite/internal/lock"
 	"github.com/kite-plus/kite/internal/plugin"
 	"github.com/kite-plus/kite/internal/render"
@@ -110,6 +111,10 @@ type Options struct {
 	// repository over HTTP and letting anyone who can reach the port rewrite
 	// it are not the same decision.
 	Write bool
+
+	// Releases checks for a newer Kite while the server runs, and the
+	// studio shows what it found. Nil checks nothing.
+	Releases *latest.Checker
 
 	Logger *slog.Logger
 }
@@ -442,6 +447,9 @@ func (s *Server) view() api.View {
 	} else {
 		s.log.Error("index of themes and plugins", "err", err)
 	}
+	if s.opts.Releases != nil {
+		v.Latest = s.opts.Releases.Known
+	}
 	if s.opts.Write {
 		v.Writer = current.Project.Writer()
 		v.Refresh = s.refresh
@@ -722,6 +730,12 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 		defer cancel()
 		_ = httpSrv.Shutdown(shutdown)
 	}()
+
+	if running, ok := kitew.Release(buildinfo.Version); ok && s.opts.Releases != nil {
+		go s.opts.Releases.Watch(ctx, running, func(r latest.Release) {
+			s.log.Info("a newer Kite is out", "version", r.Version, "running", running, "notes", r.URL)
+		})
+	}
 
 	s.log.Info("listening", "addr", "http://"+listener.Addr().String())
 	if err := httpSrv.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {

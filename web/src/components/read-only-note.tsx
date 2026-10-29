@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { InfoIcon } from "@phosphor-icons/react";
 
 import { useWritable } from "@/hooks/useContents";
 import { useI18n } from "@/i18n";
@@ -10,7 +10,7 @@ export function ReadOnlyNote({ className }: { className?: string }) {
   if (useWritable()) return null;
   return (
     <Alert className={className}>
-      <Info />
+      <InfoIcon />
       <AlertDescription>{t("session.readOnlyNote")}</AlertDescription>
     </Alert>
   );

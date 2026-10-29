@@ -111,7 +111,7 @@ export function CodeField({ id, value, onChange, language, placeholder }: Props)
   return (
     <div
       ref={host}
-      className="overflow-hidden rounded-md border border-input shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
+      className="field-surface overflow-hidden rounded-md hover:border-input-hover focus-within:border-primary focus-within:ring-[3px] focus-within:ring-field-ring"
     />
   );
 }

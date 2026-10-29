@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { ExternalLink, TriangleAlert } from "lucide-react";
+import { ArrowSquareOutIcon, WarningIcon } from "@phosphor-icons/react";
 
 import { useI18n } from "@/i18n";
 import { useApp, type AppInfo } from "@/hooks/useApps";
@@ -61,13 +61,13 @@ function Details({ app, onInstall, onUpdate }: { app: AppInfo; onInstall: () => 
       <div className="grid gap-6 p-4">
         {app.problem && (
           <p className="flex gap-2 rounded-md bg-muted px-3 py-2 text-sm">
-            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <WarningIcon className="mt-0.5 size-4 shrink-0" />
             <span className="min-w-0 break-words">{app.problem}</span>
           </p>
         )}
         {app.delisted && (
           <p className="flex gap-2 rounded-md bg-destructive/5 px-3 py-2 text-sm text-destructive">
-            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <WarningIcon className="mt-0.5 size-4 shrink-0" />
             <span>{t("apps.delisted", { reason: app.delisted })}</span>
           </p>
         )}
@@ -136,7 +136,7 @@ function Details({ app, onInstall, onUpdate }: { app: AppInfo; onInstall: () => 
                         className="ms-auto inline-flex items-center gap-1 text-xs hover:underline"
                       >
                         {t("apps.notes")}
-                        <ExternalLink className="size-3" />
+                        <ArrowSquareOutIcon className="size-3" />
                       </a>
                     )}
                   </div>
@@ -167,7 +167,7 @@ function Out({ href, children }: { href: string; children: ReactNode }) {
   return (
     <a href={href} target="_blank" rel="noreferrer" className="inline-flex max-w-full items-center gap-1 hover:underline">
       <span className="truncate">{children}</span>
-      <ExternalLink className="size-3 shrink-0" />
+      <ArrowSquareOutIcon className="size-3 shrink-0" />
     </a>
   );
 }

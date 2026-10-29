@@ -1,18 +1,19 @@
+import { GlobeSimpleIcon } from "@phosphor-icons/react";
+
 import type { Settings } from "@/api/client";
 import { useI18n, type Key } from "@/i18n";
 import { useWritable } from "@/hooks/useContents";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { InputGroup } from "@/components/ui/input-group";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { CodeField } from "@/components/CodeField";
 import { KeywordsInput } from "@/components/KeywordsInput";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { TimezoneSelect } from "@/components/TimezoneSelect";
 import { ContentSection } from "../components/content-section";
-import { Group, Row } from "../components/form-group";
-import { FormProblem, LeaveGuard, SaveButton, useSettingsForm } from "../use-settings-form";
+import { Group, Row, SwitchRow } from "../components/form-group";
+import { FormProblem, LeaveGuard, SettingsActions, useSettingsForm } from "../use-settings-form";
 
 /** paths maps a field of the form to the config path that holds it. */
 const paths: Record<string, string> = {
@@ -50,28 +51,66 @@ const read = ({ site, build, content }: Settings) => ({
 
 type Values = ReturnType<typeof read>;
 
+/** groups names the keys of the form each group holds, to mark it on the route. */
+const groups = {
+  basics: ["title", "description", "base_url", "language", "timezone"],
+  search: ["keywords", "noindex"],
+  reading: ["page_size", "feed_limit"],
+  writing: ["default_category"],
+  code: ["head_html", "footer_html"],
+};
+
 export function SiteSettings() {
   const { t } = useI18n();
-  const form = useSettingsForm(read, (key) => paths[key]);
+  const form = useSettingsForm(read, (key) => paths[key], (values) => check(values, t));
   const writable = useWritable();
   const values = form.values as Partial<Values>;
   const set = (key: keyof Values, value: unknown) => form.change({ ...values, [key]: value });
   const text = (key: keyof Values) => (value: string) => set(key, value === "" ? null : value);
   const count = (key: keyof Values) => (value: string) => set(key, value === "" ? null : Number(value));
+  const marks = (keys: string[]) => ({ changed: form.touched(...keys), problem: form.troubled(...keys) });
 
   return (
-    <ContentSection title={t("settings.site")} desc={t("settings.siteNote")} writes>
+    <ContentSection
+      title={t("settings.site")}
+      desc={t("settings.siteNote")}
+      writes
+      actions={writable && <SettingsActions form={form} />}
+      end={{ title: t("settings.endConfig"), note: t("settings.endConfigNote") }}
+    >
       <div>
         <FormProblem form={form} />
         {!form.loaded ? (
           <Skeleton className="h-72 w-full" />
         ) : (
-          <fieldset disabled={!writable} className="grid gap-10">
-            <Group title={t("settings.groupBasics")}>
-              <Row id="title" label="settings.siteTitle">
+          <fieldset disabled={!writable}>
+            <Group
+              id="site-basics"
+              title={t("settings.groupBasics")}
+              note={t("settings.groupBasicsNote")}
+              {...marks(groups.basics)}
+            >
+              <Row id="title" label="settings.siteTitle" half>
                 <Input id="title" value={values.title ?? ""} onChange={(event) => set("title", event.target.value)} />
               </Row>
-              <Row id="description" label="settings.siteDescription" help="settings.siteDescriptionHelp">
+              <Row
+                id="base_url"
+                label="settings.siteBaseURL"
+                help="settings.siteBaseURLHelp"
+                half
+                problem={form.problems.base_url}
+              >
+                <InputGroup
+                  id="base_url"
+                  type="url"
+                  spellCheck={false}
+                  start={<GlobeSimpleIcon />}
+                  aria-invalid={Boolean(form.problems.base_url) || undefined}
+                  value={values.base_url ?? ""}
+                  onChange={(event) => set("base_url", event.target.value)}
+                />
+              </Row>
+              <Row id="description" label="settings.siteDescription" help="settings.siteDescriptionHelp" optional>
                 <Textarea
                   id="description"
                   rows={3}
@@ -79,25 +118,21 @@ export function SiteSettings() {
                   onChange={(event) => text("description")(event.target.value)}
                 />
               </Row>
-              <Row id="base_url" label="settings.siteBaseURL" help="settings.siteBaseURLHelp">
-                <Input
-                  id="base_url"
-                  type="url"
-                  spellCheck={false}
-                  value={values.base_url ?? ""}
-                  onChange={(event) => set("base_url", event.target.value)}
-                />
-              </Row>
-              <Row id="language" label="settings.siteLanguage">
+              <Row id="language" label="settings.siteLanguage" half>
                 <LanguageSelect id="language" value={values.language ?? ""} onChange={(v) => set("language", v)} />
               </Row>
-              <Row id="timezone" label="settings.siteTimezone" help="settings.siteTimezoneHelp">
+              <Row id="timezone" label="settings.siteTimezone" help="settings.siteTimezoneHelp" half optional>
                 <TimezoneSelect id="timezone" value={values.timezone ?? null} onChange={(v) => set("timezone", v)} />
               </Row>
             </Group>
 
-            <Group title={t("settings.groupSearch")}>
-              <Row id="keywords" label="settings.siteKeywords" help="settings.siteKeywordsHelp">
+            <Group
+              id="site-search"
+              title={t("settings.groupSearch")}
+              note={t("settings.groupSearchNote")}
+              {...marks(groups.search)}
+            >
+              <Row id="keywords" label="settings.siteKeywords" help="settings.siteKeywordsHelp" optional>
                 <KeywordsInput
                   id="keywords"
                   value={values.keywords ?? []}
@@ -105,53 +140,75 @@ export function SiteSettings() {
                   onChange={(words) => set("keywords", words.length ? words : null)}
                 />
               </Row>
-              <div className="flex items-start justify-between gap-6">
-                <div className="grid gap-1">
-                  <Label htmlFor="indexed">{t("settings.siteIndexed")}</Label>
-                  <p className="text-sm text-muted-foreground">{t("settings.siteIndexedHelp")}</p>
-                </div>
-                <Switch
-                  id="indexed"
-                  checked={!values.noindex}
-                  onCheckedChange={(indexed) => set("noindex", !indexed)}
-                />
-              </div>
+              <SwitchRow
+                id="indexed"
+                label="settings.siteIndexed"
+                help="settings.siteIndexedHelp"
+                checked={!values.noindex}
+                onCheckedChange={(indexed) => set("noindex", !indexed)}
+              />
             </Group>
 
-            <Group title={t("settings.groupReading")}>
-              <div className="grid gap-6 sm:grid-cols-2">
-                <Row
+            <Group
+              id="site-reading"
+              title={t("settings.groupReading")}
+              note={t("settings.groupReadingNote")}
+              {...marks(groups.reading)}
+            >
+              <Row
+                id="page_size"
+                label="settings.pageSize"
+                help="settings.pageSizeHelp"
+                note={pagedOtherwise(form.settings?.build.pagination, t)}
+                half
+                problem={form.problems.page_size}
+              >
+                <InputGroup
                   id="page_size"
-                  label="settings.pageSize"
-                  help="settings.pageSizeHelp"
-                  note={pagedOtherwise(form.settings?.build.pagination, t)}
-                >
-                  <Input
-                    id="page_size"
-                    type="number"
-                    min={1}
-                    max={100}
-                    placeholder="10"
-                    value={values.page_size ?? ""}
-                    onChange={(event) => count("page_size")(event.target.value)}
-                  />
-                </Row>
-                <Row id="feed_limit" label="settings.feedLimit" help="settings.feedLimitHelp">
-                  <Input
-                    id="feed_limit"
-                    type="number"
-                    min={1}
-                    max={1000}
-                    placeholder="20"
-                    value={values.feed_limit ?? ""}
-                    onChange={(event) => count("feed_limit")(event.target.value)}
-                  />
-                </Row>
-              </div>
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="10"
+                  end={t("form.unitPosts")}
+                  aria-invalid={Boolean(form.problems.page_size) || undefined}
+                  value={values.page_size ?? ""}
+                  onChange={(event) => count("page_size")(event.target.value)}
+                />
+              </Row>
+              <Row
+                id="feed_limit"
+                label="settings.feedLimit"
+                help="settings.feedLimitHelp"
+                half
+                problem={form.problems.feed_limit}
+              >
+                <InputGroup
+                  id="feed_limit"
+                  type="number"
+                  min={1}
+                  max={1000}
+                  placeholder="20"
+                  end={t("form.unitPosts")}
+                  aria-invalid={Boolean(form.problems.feed_limit) || undefined}
+                  value={values.feed_limit ?? ""}
+                  onChange={(event) => count("feed_limit")(event.target.value)}
+                />
+              </Row>
             </Group>
 
-            <Group title={t("settings.groupWriting")}>
-              <Row id="default_category" label="settings.defaultCategory" help="settings.defaultCategoryHelp">
+            <Group
+              id="site-writing"
+              title={t("settings.groupWriting")}
+              note={t("settings.groupWritingNote")}
+              {...marks(groups.writing)}
+            >
+              <Row
+                id="default_category"
+                label="settings.defaultCategory"
+                help="settings.defaultCategoryHelp"
+                half
+                optional
+              >
                 <Input
                   id="default_category"
                   placeholder={t("settings.defaultCategoryNone")}
@@ -161,8 +218,13 @@ export function SiteSettings() {
               </Row>
             </Group>
 
-            <Group title={t("settings.groupCode")} note={t("settings.groupCodeNote")}>
-              <Row id="head_html" label="settings.headHTML" help="settings.headHTMLHelp">
+            <Group
+              id="site-code"
+              title={t("settings.groupCode")}
+              note={t("settings.groupCodeNote")}
+              {...marks(groups.code)}
+            >
+              <Row id="head_html" label="settings.headHTML" help="settings.headHTMLHelp" optional>
                 <CodeField
                   id="head_html"
                   language="html"
@@ -171,7 +233,7 @@ export function SiteSettings() {
                   onChange={(value) => text("head_html")(value)}
                 />
               </Row>
-              <Row id="footer_html" label="settings.footerHTML" help="settings.footerHTMLHelp">
+              <Row id="footer_html" label="settings.footerHTML" help="settings.footerHTMLHelp" optional>
                 <CodeField
                   id="footer_html"
                   language="html"
@@ -180,16 +242,42 @@ export function SiteSettings() {
                 />
               </Row>
             </Group>
-
-            <div>
-              <SaveButton form={form} />
-            </div>
           </fieldset>
         )}
         <LeaveGuard form={form} />
       </div>
     </ContentSection>
   );
+}
+
+/**
+ * check finds what the server would refuse, so the form says so beside the
+ * field and holds the save back rather than reporting it after a round trip.
+ */
+function check(values: Record<string, unknown>, t: ReturnType<typeof useI18n>["t"]) {
+  const between = (value: unknown, min: number, max: number) =>
+    value === null || value === undefined
+      ? null
+      : Number(value) < min
+        ? t("form.tooSmall", { min })
+        : Number(value) > max
+          ? t("form.tooLarge", { max })
+          : null;
+  return {
+    base_url: siteURL(values.base_url) ? null : t("form.badSiteURL"),
+    page_size: between(values.page_size, 1, 100),
+    feed_limit: between(values.feed_limit, 1, 1000),
+  };
+}
+
+function siteURL(value: unknown): boolean {
+  if (typeof value !== "string" || value.trim() === "") return false;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
 }
 
 const listings = ["home", "list", "term"] as const;

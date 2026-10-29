@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { TrashIcon } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export function RemoveButton({
       onClick={onClick}
       className="text-destructive hover:bg-destructive/10 hover:text-destructive"
     >
-      <Trash2 />
+      <TrashIcon />
       {label}
     </Button>
   );
