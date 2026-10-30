@@ -69,18 +69,18 @@ type commandShape struct {
 
 func serveCommand(shape commandShape) *cobra.Command {
 	var (
-		addr   string
-		port   int
-		watch  bool
-		reload bool
-		drafts bool
-		admin  bool
-		write  bool
-		cache  bool
+		addr       string
+		port       int
+		watch      bool
+		reload     bool
+		drafts     bool
+		admin      bool
+		write      bool
+		cache      bool
 		cacheQuery string
-		pprof  bool
-		open   bool
-		quiet  bool
+		pprof      bool
+		open       bool
+		quiet      bool
 	)
 
 	cmd := &cobra.Command{

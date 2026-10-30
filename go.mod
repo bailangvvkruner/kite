@@ -10,10 +10,12 @@ toolchain go1.26.8
 require (
 	aead.dev/minisign v0.3.0
 	github.com/alecthomas/chroma/v2 v2.27.0
+	github.com/andybalholm/brotli v1.2.0
 	github.com/deepteams/webp v1.2.8
 	github.com/extism/go-pdk v1.1.3
 	github.com/extism/go-sdk v1.7.1
 	github.com/fsnotify/fsnotify v1.10.1
+	github.com/klauspost/compress v1.18.0
 	github.com/oklog/ulid/v2 v2.1.2
 	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/spf13/cobra v1.10.2
@@ -28,7 +30,6 @@ require (
 )
 
 require (
-	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/dlclark/regexp2/v2 v2.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dylibso/observe-sdk/go v0.0.0-20240819160327-2d926c5d788a // indirect
@@ -36,7 +37,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/ianlancetaylor/demangle v0.0.0-20240805132620-81f5be970eca // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect

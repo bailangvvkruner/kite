@@ -242,9 +242,9 @@ func NewWithClock(ctx context.Context, s *site.Site, opts Options, now func() ti
 	}
 	if opts.CachePages {
 		srv.pages = newPageCache()
-		switch {
-		case opts.CacheQuery == "", opts.CacheQuery == "strict":
-		case opts.CacheQuery == "ignore":
+		switch opts.CacheQuery {
+		case "", "strict":
+		case "ignore":
 			srv.cacheFold = true
 		default:
 			for _, name := range strings.Split(opts.CacheQuery, ",") {
@@ -955,9 +955,7 @@ func serveBytes(w http.ResponseWriter, r *http.Request, name string, modTime tim
 		e = negotiate(r.Header.Get("Accept-Encoding"))
 	}
 	w.Header().Add("Vary", "Accept-Encoding")
-	if e == EncodingIdentity || len(data) < worthCompressing {
-		e = EncodingIdentity
-	} else {
+	if e != EncodingIdentity && len(data) >= worthCompressing {
 		w.Header().Set("Content-Encoding", string(e))
 		data = encode(data, e)
 	}

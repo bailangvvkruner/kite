@@ -20,7 +20,7 @@ import (
 // small budget of its own, so a flood of one-shot addresses — the ?x= of
 // a scraper — churns that pool and never evicts a page of the site.
 type pageCache struct {
-	kept   pool
+	kept  pool
 	asked pool
 
 	flightMu sync.Mutex

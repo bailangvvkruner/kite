@@ -162,12 +162,12 @@ func TestPageCacheHoldSerializesOneAddress(t *testing.T) {
 // is folded away, kept in one spelling, or refused to the keeping.
 func TestCacheKey(t *testing.T) {
 	for _, tt := range []struct {
-		name string
-		path string
-		query string
-		fold  bool
-		keep  []string
-		key string
+		name     string
+		path     string
+		query    string
+		fold     bool
+		keep     []string
+		key      string
 		keepable bool
 	}{
 		{name: "plain", path: "/a/", query: "", key: "/a/", keepable: true},
